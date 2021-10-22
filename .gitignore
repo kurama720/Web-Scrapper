@@ -141,3 +141,5 @@ cython_debug/
 
 scrapper/test.py
 scrapper/chromedriver.exe
+scrapper/phantomjs-2.1.1-windows
+scrapper/phantomjs.exe
