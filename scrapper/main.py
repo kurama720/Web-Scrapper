@@ -14,7 +14,6 @@ URL = 'https://www.reddit.com/top/?t=month'
 def get_data():
     try:
         driver.get(url=URL)
-        time.sleep(3)
 
         post_counter = 0
         while True:
@@ -29,7 +28,7 @@ def get_data():
                 posts = driver.find_elements(By.CLASS_NAME, '_1oQyIsiPHYt6nx7VOmd1sz')
                 post_counter += len(posts)
 
-    except EOFError as ex:
+    except Exception as ex:
         print(ex)
 
     finally:
@@ -68,32 +67,37 @@ def get_data_urls():
 
 def get_data_to_record():
     with open('reddit.txt', 'w', encoding='utf8') as f:
-        for i in range(0, len(post_urls_list)):
-            session = HTMLSession()
-            response = session.get(url=user_urls_list[i])
-            soup = BeautifulSoup(response.content, 'lxml')
-            response_post = session.get(url=post_urls_list[i])
-            soup_post = BeautifulSoup(response_post.content, 'lxml')
-            try:
+        try:
+            for i in range(0, len(post_urls_list)):
+                session = HTMLSession()
+                driver.get(url=post_urls_list[i])
+                response_user = session.get(url=user_urls_list[i])
+                soup_user = BeautifulSoup(response_user.content, 'lxml')
+                response_post = session.get(url=post_urls_list[i])
+                soup_post = BeautifulSoup(response_post.content, 'lxml')
+
                 unique_id = uuid.uuid4()
                 post_url = post_urls_list[i]
-                author = None
-                user_karma = soup.find('div', class_='_3KNaG9-PoXf4gcuy5_RCVy')
-                cake_day = soup.find('span', id='profile--id-card--highlight-tooltip--cakeday')
+                author = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')
+                user_karma = soup_user.find('div', class_='_3KNaG9-PoXf4gcuy5_RCVy')
+                cake_day = soup_user.find('span', id='profile--id-card--highlight-tooltip--cakeday')
                 number_of_comments = soup_post.find('a', class_='_1UoeAeSRhOKSNdY_h3iS1O')
                 number_of_votes = soup_post.find('div', class_='_1rZYMD_4xY3gRcSS3p8ODO')
                 data_to_record = {
                     'UNIQUE ID': unique_id,
                     'POST URL': post_url,
-                    'AUTHOR': author,
+                    'AUTHOR': None if author is None else author.text.removeprefix('u/'),
                     'USER KARMA': None if user_karma is None else user_karma.text,
                     'CAKE DAY': None if cake_day is None else cake_day.text,
                     'NUMBER OF COMMENTS': None if number_of_comments is None else number_of_comments.text,
                     'NUMBER OF VOTES': None if number_of_votes is None else number_of_votes.text,
                 }
                 f.write(f"{data_to_record}\n")
-            except Exception as ex:
-                print(ex)
+        except Exception as ex:
+            print(ex)
+        finally:
+            driver.close()
+            driver.quit()
 
 
 def main():
@@ -104,4 +108,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
