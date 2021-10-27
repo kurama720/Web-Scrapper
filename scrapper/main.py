@@ -1,10 +1,6 @@
-"""A scrapper for reddit.com. Uses BeautifulSoup and Selenium to parse. Searches for 100 posts in category Top ->
-This Month. Pulls such info as: post URL, author's username, author's karma, cake day, post karma, comment karma, post
-date, number of comments, number of votes and post category. And also assigns a unique id for each record with uuid.
-Writes this info into a txt file named reddit-YYYY-MM-DD-HH-MM, where YYYY - year, MM - month, DD - day, HH - hour,
-MM - minute. Scrapping takes ~15 minutes.
+"""Main module of scrapper. Most of the logic is here.
 
-No arguments are to be given. To run the scrapper execute the function main().
+To run the scrapper execute the function main() here.
 
 """
 
