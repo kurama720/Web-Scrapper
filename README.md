@@ -4,11 +4,11 @@
 ## How it works?
 
 ---
-**It parses reddit.com with BeautifulSoup and Selenium. Searches for 100 posts in category Top -> This Month. Pulls such
-info as: post URL, author's username, author's karma, cake day, post karma, comment karma, post date, number of 
-comments, number of votes and post category. Also assigns a unique id for each record with uuid. Writes this info into a
-txt file named reddit-YYYY-MM-DD-HH-MM, where YYYY - year, MM - month, DD - day, HH - hour, MM - minute. Scrapping takes
-~15 minutes.**
+**It parses reddit.com with** _BeautifulSoup_ and _Selenium_. **Searches for 100 posts in category** _Top -> This 
+Month_. **Pulls such info as:** _post URL_, _author's username_, _author's karma_, _cake day_, _post karma_, 
+_comment karma_, _post date_, _number of comments_, _number of votes_ and _post category_. **Also assigns a**
+_unique id_ **for each record with** _uuid_. **Writes this info into a txt file named*** _reddit-YYYY-MM-DD-HH-MM_, 
+where _YYYY_ - year, _MM_ - month, _DD_ - day, _HH_ - hour, _MM_ - minute. Scrapping takes ~15 minutes.**
 
 ## How to run?
 
