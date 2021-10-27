@@ -13,4 +13,4 @@ txt file named reddit-YYYY-MM-DD-HH-MM, where YYYY - year, MM - month, DD - day,
 ## How to run?
 
 ___
-**Execute function** _main.py_ **in module _main.py_ in the directory _scrapper_**
+**Execute function** _main.py_ **in module** _main.py_ **in the directory** _scrapper_
