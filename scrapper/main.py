@@ -79,18 +79,9 @@ def get_data_urls() -> NoReturn:
         user_urls: List = soup.find_all('a', class_='_2tbHP6ZydRpjI44J3syuqC')
         post_urls: List = soup_for_post_url.find_all('a', class_='SQnoC3ObvgnGjWt90zD9Z')
         # Save them into the lists.
-        for item in user_urls:
-            if len(USER_URLS_LIST) == 100:
-                break
-            else:
-                user_url: str = 'https://www.reddit.com' + item.get('href')
-                USER_URLS_LIST.append(user_url)
-        for item in post_urls:
-            if len(POST_URLS_LIST) == 100:
-                break
-            else:
-                post_url: str = 'https://www.reddit.com' + item.get('href')
-                POST_URLS_LIST.append(post_url)
+        global USER_URLS_LIST, POST_URLS_LIST
+        USER_URLS_LIST = ['https://www.reddit.com' + item.get('href') for item in user_urls]
+        POST_URLS_LIST = ['https://www.reddit.com' + item.get('href') for item in post_urls]
 
         urls_end_time: float = time.time() - urls_start_time
         LOGGER.info(f"Urls were successfully saved in {urls_end_time:.2f} sec")
@@ -130,9 +121,6 @@ def get_data_to_record() -> NoReturn:
                 action = ActionChains(driver)
                 response_user = session.get(url=USER_URLS_LIST[i])
                 soup_user = BeautifulSoup(response_user.content, 'lxml')
-                # Create unique id
-                unique_id: str = str(uuid.uuid4())
-                post_url: str = POST_URLS_LIST[i]
                 # Wait until info is loaded on a page
                 WebDriverWait(driver, 10)\
                     .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
@@ -140,10 +128,7 @@ def get_data_to_record() -> NoReturn:
                 try:
                     author: str = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG').text\
                         .removeprefix('u/')
-                except AttributeError:
-                    author = 'Element was not found'
-                    LOGGER.error(f"Element author was not found  in {i+1} record")
-                except NoSuchElementException:
+                except (AttributeError, NoSuchElementException):
                     author = 'Element was not found'
                     LOGGER.error(f"Element author was not found  in {i+1} record")
                 except Exception as ex:
@@ -156,42 +141,33 @@ def get_data_to_record() -> NoReturn:
                     else:
                         user_karma: str = soup_user.find('div', class_='_3KNaG9-PoXf4gcuy5_RCVy').text
                         cake_day: str = soup_user.find('span', id='profile--id-card--highlight-tooltip--cakeday').text
-                except AttributeError:
+                except (AttributeError, NoSuchElementException):
                     user_karma = 'Element was not found'
                     cake_day = 'Element was not found'
-                except NoSuchElementException:
-                    user_karma = 'Element was not found'
-                    cake_day = 'Element was not found'
-                    LOGGER.error(f"Elements user_karma, cake_day were not found  in {i+1} record")
+                    LOGGER.error(f"Elements user_karma, cake_day were not found  in {i + 1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the elements: user_karma, cake_day  in {i+1} record")
                 try:
                     # Find number of comments on a post.
                     number_of_comments: str = driver.find_element(By.CLASS_NAME, '_1UoeAeSRhOKSNdY_h3iS1O').text
-                except AttributeError:
+                except (AttributeError, NoSuchElementException):
                     number_of_comments = 'Element was not found'
-                except NoSuchElementException:
-                    number_of_comments = 'Element was not found'
-                    LOGGER.error(f"Element number_of_comments was not found  in {i+1} record")
+                    LOGGER.error(f"Element number_of_comments was not found  in {i + 1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the element: number_of_comments  in {i+1} record")
                 try:
                     # Find number of votes on a post
                     number_of_votes: str = driver.find_element(By.CLASS_NAME, '_1rZYMD_4xY3gRcSS3p8ODO').text
-                except AttributeError:
+                except (AttributeError, NoSuchElementException):
                     number_of_votes = 'Element was not found'
-                except NoSuchElementException:
-                    number_of_votes = 'Element was not found'
-                    LOGGER.error(f"Element number_of_votes was not found  in {i+1} record")
+                    LOGGER.error(f"Element number_of_votes was not found  in {i + 1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the element: number_of_votes  in {i+1} record")
                 try:
                     # Find post category and remove the prefix r/
                     post_category: str = driver.find_element(By.CLASS_NAME, '_19bCWnxeTjqzBElWZfIlJb')\
                         .get_property('title').removeprefix('r/')
-                except AttributeError:
-                    post_category = 'Element was not found'
-                except NoSuchElementException:
+                except (AttributeError, NoSuchElementException):
                     post_category = 'Element was not found'
                     LOGGER.error(f"Element post_category was not found in {i+1} record")
                 except Exception as ex:
@@ -205,20 +181,16 @@ def get_data_to_record() -> NoReturn:
                     post_and_comment_karma: List = driver.find_elements(By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')
                     post_karma: str = post_and_comment_karma[0].text
                     comment_karma: str = post_and_comment_karma[1].text
-                except IndexError:
+                except (IndexError, NoSuchElementException):
                     post_karma = 'Element was not found'
                     comment_karma = 'Element was not found'
                     LOGGER.error(f'Post and comment karma were not found in {i+1} record')
-                except NoSuchElementException:
-                    post_karma = 'Element was not found'
-                    comment_karma = 'Element was not found'
-                    LOGGER.error(f"Elements post_karma, comment_karma were not found in {i+1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the elements: post_karma, comment_karma in {i+1} record")
                 # Save all the info into the dictionary
                 data_to_record: Dict[str, str] = {
-                    'UNIQUE ID': unique_id,
-                    'POST URL': post_url,
+                    'UNIQUE ID': str(uuid.uuid4()),
+                    'POST URL': POST_URLS_LIST[i],
                     'AUTHOR': author,
                     'USER KARMA': user_karma,
                     'CAKE DAY': cake_day,
@@ -228,7 +200,7 @@ def get_data_to_record() -> NoReturn:
                     'NUMBER OF VOTES': number_of_votes,
                     'POST CATEGORY': post_category,
                 }
-                # Record it into the file
+                # Record data into the file
                 f.write(f"{data_to_record}\n")
                 cycle_end_time: int = int(time.time() - cycle_start_time)
                 if 'Element was not found' not in data_to_record.values():
