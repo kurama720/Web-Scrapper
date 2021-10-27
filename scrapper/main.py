@@ -11,7 +11,7 @@ from typing import List, Dict, NoReturn
 
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
@@ -127,6 +127,8 @@ def get_data_to_record() -> NoReturn:
                 except (AttributeError, NoSuchElementException):
                     author = 'Element was not found'
                     LOGGER.error(f"Element author was not found  in {i+1} record")
+                except WebDriverException as ex:
+                    LOGGER.error(f"{ex} occurred with the element: author in {i+1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the element: author in {i+1} record")
                 try:
@@ -141,6 +143,8 @@ def get_data_to_record() -> NoReturn:
                     user_karma = 'Element was not found'
                     cake_day = 'Element was not found'
                     LOGGER.error(f"Elements user_karma, cake_day were not found  in {i + 1} record")
+                except WebDriverException as ex:
+                    LOGGER.error(f"{ex} occurred with the elements: user_karma, cake_day in {i+1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the elements: user_karma, cake_day  in {i+1} record")
                 try:
@@ -149,6 +153,8 @@ def get_data_to_record() -> NoReturn:
                 except (AttributeError, NoSuchElementException):
                     number_of_comments = 'Element was not found'
                     LOGGER.error(f"Element number_of_comments was not found  in {i + 1} record")
+                except WebDriverException as ex:
+                    LOGGER.error(f"{ex} occurred with the element: number_of_comments in {i+1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the element: number_of_comments  in {i+1} record")
                 try:
@@ -157,6 +163,8 @@ def get_data_to_record() -> NoReturn:
                 except (AttributeError, NoSuchElementException):
                     number_of_votes = 'Element was not found'
                     LOGGER.error(f"Element number_of_votes was not found  in {i + 1} record")
+                except WebDriverException as ex:
+                    LOGGER.error(f"{ex} occurred with the element: number_of_votes in {i+1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the element: number_of_votes  in {i+1} record")
                 try:
@@ -166,6 +174,8 @@ def get_data_to_record() -> NoReturn:
                 except (AttributeError, NoSuchElementException):
                     post_category = 'Element was not found'
                     LOGGER.error(f"Element post_category was not found in {i+1} record")
+                except WebDriverException as ex:
+                    LOGGER.error(f"{ex} occurred with the element: post_category in {i + 1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the element: post_category in {i+1} record")
                 # Use selenium to imitate cursor freezing to load other information and wait until it loads.
@@ -181,9 +191,28 @@ def get_data_to_record() -> NoReturn:
                     post_karma = 'Element was not found'
                     comment_karma = 'Element was not found'
                     LOGGER.error(f'Post and comment karma were not found in {i+1} record')
+                except WebDriverException as ex:
+                    LOGGER.error(f"{ex} occurred with the elements: post and comment karma in {i+1} record")
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the elements: post_karma, comment_karma in {i+1} record")
-                # Save all the info into the dictionary
+                try:
+                    # Find post date
+                    amount = []
+                    for item in driver.find_element(By.CLASS_NAME, '_3jOxDPIQ0KaOWpzvSQo-1s').text:
+                        if item in [str(i) for i in range(1, 10)]:
+                            amount.append(item)
+                    current_date = datetime.datetime.now()
+                    delta = datetime.timedelta(days=(int(''.join(amount))))
+                    current_date = current_date - delta
+                    post_date = f"{current_date.day}-{current_date.month}-{current_date.year}"
+                except (AttributeError, NoSuchElementException):
+                    post_date = 'Element was not found'
+                    LOGGER.error(f"Element post_date was not found in {i+1} record")
+                except WebDriverException as ex:
+                    LOGGER.error(f"{ex} occurred with the element: post_date in {i+1} record")
+                except Exception as ex:
+                    LOGGER.error(f"{ex} occurred with the element: post_date in {i+1} record")
+                    # Save all the info into the dictionary
                 data_to_record: Dict[str, str] = {
                     'UNIQUE ID': str(uuid.uuid4()),
                     'POST URL': POST_URLS_LIST[i],
@@ -192,6 +221,7 @@ def get_data_to_record() -> NoReturn:
                     'CAKE DAY': cake_day,
                     'POST KARMA': post_karma,
                     'COMMENT KARMA': comment_karma,
+                    'POST DATE': post_date,
                     'NUMBER OF COMMENTS': number_of_comments,
                     'NUMBER OF VOTES': number_of_votes,
                     'POST CATEGORY': post_category,
