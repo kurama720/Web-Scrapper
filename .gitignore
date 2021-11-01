@@ -139,8 +139,6 @@ cython_debug/
 
 .idea
 
-scrapper/test.py
-scrapper/phantomjs-2.1.1-windows
-scrapper/phantomjs.exe
+scrapper/chromedriver.exe
 scrapper/reddit.txt
 scrapper/reddit_source.html
