@@ -1,6 +1,12 @@
 # Scrapper for reddit.com
 
 ---
+## How to install?
+
+---
+
+```$ git clone https://github.com/kurama720/iTechArtLab.git```
+
 ## How it works?
 
 ---
@@ -13,5 +19,12 @@ minute. Scrapping takes ~15 minutes.**
 
 ## How to run?
 
-___
-**Execute function** _main.py_ **in module** _main.py_ **in the directory** _scrapper_
+---
+Execute this in the folder iTechArt/scrapper:
+```$ python execute.py -a run```
+
+To find out file name:
+```$ python execute.py -a file```
+
+To find out amount of records:
+```$ python execute.py -a rows```

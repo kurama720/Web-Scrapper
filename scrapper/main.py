@@ -1,9 +1,6 @@
 """Main module of scrapper. Most of the logic is here.
 
-To run the scrapper execute the function main() here.
-
 """
-
 import uuid
 import time
 import datetime
@@ -11,7 +8,7 @@ from typing import List, Dict, NoReturn
 
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
-from selenium.common.exceptions import NoSuchElementException, WebDriverException, StaleElementReferenceException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
@@ -20,7 +17,6 @@ from urllib3.exceptions import MaxRetryError
 
 from selenium_driver import driver
 from logger import create_logger
-
 
 URL: str = 'https://www.reddit.com/top/?t=month'
 
@@ -34,6 +30,7 @@ def get_data() -> NoReturn:
 
     """
     scroll_time_start: float = time.time()
+    LOGGER.info('Program started. To break use ctrl+C')
     try:
         # Feed driver with the URL.
         driver.get(url=URL)
@@ -112,48 +109,55 @@ def get_data_to_record() -> NoReturn:
             response_user = session.get(url=USER_URLS_LIST[i])
             soup_user = BeautifulSoup(response_user.content, 'lxml')
             # Wait until data is loaded on a page
-            WebDriverWait(driver, 10)\
-                .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
+            try:
+                WebDriverWait(driver, 10) \
+                    .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
+            except TimeoutException:
+                data_to_record['UNIQUE ID'] = str(uuid.uuid4())
+                data_to_record['POST URL'] = POST_URLS_LIST[i]
+                data_to_record = {k: "data wasn't loaded" for k in ['AUTHOR', 'USER KARMA', 'CAKE DAY',
+                                                                    'COMMENTS NUMBER', 'VOTES NUMBER', 'POST CATEGORY',
+                                                                    'POST KARMA', 'COMMENT KARMA', 'POST DATE']}
+                RECORDING_DATA.append(data_to_record)
+                LOGGER.error(f'Timeout raised in author element in {i + 1} record')
+                continue
             # Create an id
             data_to_record['UNIQUE ID'] = str(uuid.uuid4())
             data_to_record['POST URL'] = POST_URLS_LIST[i]
             # Find author's username
             try:
-                data_to_record['AUTHOR']: str = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG').text\
+                data_to_record['AUTHOR']: str = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG').text \
                     .removeprefix('u/')
             except (AttributeError, NoSuchElementException):
                 data_to_record['AUTHOR'] = 'Element was not found'
-                LOGGER.error(f"Element author was not found  in {i+1} record")
-            except StaleElementReferenceException:
-                pass
+                LOGGER.error(f"Element author was not found  in {i + 1} record")
             except WebDriverException as ex:
-                LOGGER.error(f"{ex} occurred with the element: author in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: author in {i + 1} record")
             except Exception as ex:
-                LOGGER.error(f"{ex} occurred with the element: author in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: author in {i + 1} record")
             try:
                 # Check if author's profile has 18+ limit
                 if soup_user.find('h3', text='You must be 18+ to view this community'):
                     data_to_record['USER KARMA']: str = '18+ profile'
                     data_to_record['CAKE DAY']: str = '18+ profile'
                 # Check if author's profile has been suspended
-                elif soup_user.find('h3', text='This account has been'):
+                elif soup_user.find('h3', class_='_2XKLlvmuqdor3RvVbYZfgz'):
                     data_to_record['USER KARMA']: str = 'Account has been suspended'
                     data_to_record['CAKE DAY']: str = 'Account has been suspended'
                 # Then find cake day and user karma
                 else:
-                    data_to_record['USER KARMA']: str = soup_user.find('div', class_='_3KNaG9-PoXf4gcuy5_RCVy').text
+                    data_to_record['USER KARMA']: str = soup_user.find(
+                        'span', id='profile--id-card--highlight-tooltip--karma').text
                     data_to_record['CAKE DAY']: str = soup_user.find(
                         'span', id='profile--id-card--highlight-tooltip--cakeday').text
             except (AttributeError, NoSuchElementException):
                 data_to_record['USER KARMA'] = 'Element was not found'
                 data_to_record['CAKE DAY'] = 'Element was not found'
                 LOGGER.error(f"Elements user_karma, cake_day were not found  in {i + 1} record")
-            except StaleElementReferenceException:
-                pass
             except WebDriverException as ex:
-                LOGGER.error(f"{ex} occurred with the elements: user_karma, cake_day in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the elements: user_karma, cake_day in {i + 1} record")
             except Exception as ex:
-                LOGGER.error(f"{ex} occurred with the elements: user_karma, cake_day  in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the elements: user_karma, cake_day  in {i + 1} record")
             try:
                 # Find number of comments on a post
                 data_to_record['COMMENTS NUMBER']: str = driver.find_element(By.CLASS_NAME,
@@ -161,41 +165,41 @@ def get_data_to_record() -> NoReturn:
             except (AttributeError, NoSuchElementException):
                 data_to_record['COMMENTS NUMBER'] = 'Element was not found'
                 LOGGER.error(f"Element number_of_comments was not found  in {i + 1} record")
-            except StaleElementReferenceException:
-                pass
             except WebDriverException as ex:
-                LOGGER.error(f"{ex} occurred with the element: number_of_comments in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: number_of_comments in {i + 1} record")
             except Exception as ex:
-                LOGGER.error(f"{ex} occurred with the element: number_of_comments  in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: number_of_comments  in {i + 1} record")
             try:
                 # Find number of votes on a post
                 data_to_record['VOTES NUMBER']: str = driver.find_element(By.CLASS_NAME, '_1rZYMD_4xY3gRcSS3p8ODO').text
             except (AttributeError, NoSuchElementException):
                 data_to_record['VOTES NUMBER'] = 'Element was not found'
                 LOGGER.error(f"Element number_of_votes was not found  in {i + 1} record")
-            except StaleElementReferenceException:
-                pass
             except WebDriverException as ex:
-                LOGGER.error(f"{ex} occurred with the element: number_of_votes in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: number_of_votes in {i + 1} record")
             except Exception as ex:
-                LOGGER.error(f"{ex} occurred with the element: number_of_votes  in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: number_of_votes  in {i + 1} record")
             try:
                 # Find post category and remove the prefix r/
-                data_to_record['POST CATEGORY']: str = driver.find_element(By.CLASS_NAME, '_19bCWnxeTjqzBElWZfIlJb')\
+                data_to_record['POST CATEGORY']: str = driver.find_element(By.CLASS_NAME, '_19bCWnxeTjqzBElWZfIlJb') \
                     .get_property('title').removeprefix('r/')
             except (AttributeError, NoSuchElementException):
                 data_to_record['POST CATEGORY'] = 'Element was not found'
-                LOGGER.error(f"Element post_category was not found in {i+1} record")
-            except StaleElementReferenceException:
-                pass
+                LOGGER.error(f"Element post_category was not found in {i + 1} record")
             except WebDriverException as ex:
                 LOGGER.error(f"{ex} occurred with the element: post_category in {i + 1} record")
             except Exception as ex:
-                LOGGER.error(f"{ex} occurred with the element: post_category in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: post_category in {i + 1} record")
             # Use selenium to imitate cursor freezing to load other information and wait until it loads
             action.move_to_element(driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')).perform()
-            WebDriverWait(driver, 10)\
-                .until(ec.presence_of_element_located((By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')))
+            try:
+                WebDriverWait(driver, 10) \
+                    .until(ec.presence_of_element_located((By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')))
+            except TimeoutException:
+                data_to_record = {k: "data wasn't loaded" for k in ['POST KARMA', 'COMMENT KARMA', 'POST DATE']}
+                RECORDING_DATA.append(data_to_record)
+                LOGGER.error(f'Timeout raised in post and comment karma element in {i + 1} record')
+                continue
             try:
                 # Find list of post and comment karma
                 post_and_comment_karma: List = driver.find_elements(By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')
@@ -204,13 +208,11 @@ def get_data_to_record() -> NoReturn:
             except (IndexError, NoSuchElementException):
                 data_to_record['POST KARMA'] = 'Element was not found'
                 data_to_record['COMMENT KARMA'] = 'Element was not found'
-                LOGGER.error(f'Post and comment karma were not found in {i+1} record')
-            except StaleElementReferenceException:
-                pass
+                LOGGER.error(f'Post and comment karma were not found in {i + 1} record')
             except WebDriverException as ex:
-                LOGGER.error(f"{ex} occurred with the elements: post and comment karma in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the elements: post and comment karma in {i + 1} record")
             except Exception as ex:
-                LOGGER.error(f"{ex} occurred with the elements: post_karma, comment_karma in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the elements: post_karma, comment_karma in {i + 1} record")
             try:
                 # Find post date
                 amount = []
@@ -223,20 +225,18 @@ def get_data_to_record() -> NoReturn:
                 data_to_record['POST DATE'] = f"{current_date.day}-{current_date.month}-{current_date.year}"
             except (AttributeError, NoSuchElementException):
                 data_to_record['POST DATE'] = 'Element was not found'
-                LOGGER.error(f"Element post_date was not found in {i+1} record")
-            except StaleElementReferenceException:
-                pass
+                LOGGER.error(f"Element post_date was not found in {i + 1} record")
             except WebDriverException as ex:
-                LOGGER.error(f"{ex} occurred with the element: post_date in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: post_date in {i + 1} record")
             except Exception as ex:
-                LOGGER.error(f"{ex} occurred with the element: post_date in {i+1} record")
+                LOGGER.error(f"{ex} occurred with the element: post_date in {i + 1} record")
             # Append the list to record with data dict
             RECORDING_DATA.append(data_to_record)
             cycle_end_time: int = int(time.time() - cycle_start_time)
             if 'Element was not found' not in data_to_record.values():
-                LOGGER.info(f"Record number {i+1} was pulled successfully in {cycle_end_time} sec")
+                LOGGER.info(f"Record number {i + 1} was pulled successfully in {cycle_end_time} sec")
             else:
-                LOGGER.warning(f"Record number {i+1} has some unfilled fields, was pulled in {cycle_end_time} sec")
+                LOGGER.warning(f"Record number {i + 1} has some unfilled fields, was pulled in {cycle_end_time} sec")
 
     except MaxRetryError:
         LOGGER.error('Problems with connection occurred')
@@ -246,7 +246,7 @@ def get_data_to_record() -> NoReturn:
         LOGGER.error(f"{ex} occurred in function get_record_to_record()")
 
     finally:
-        LOGGER.info(f"Recording time spent: {(time.time() - start_time)//60} min")
+        LOGGER.info(f"Recording time spent: {(time.time() - start_time) // 60} min")
 
 
 def record_data():
@@ -265,20 +265,25 @@ def record_data():
     with open(file_name, 'w', encoding='utf8') as f:
         for i in RECORDING_DATA:
             f.write(f"{str(i)}\n")
+    with open('file_info.txt', 'w') as file:
+        file.write(f"{file_name}\n")
+        with open(file_name, 'r') as f:
+            text = f.readlines()
+            size = len(text)
+        file.write(str(f"{size}\n"))
 
 
 def main() -> NoReturn:
     """Execute all functions needed for parsing."""
     program_start: float = time.time()
-    get_data()
-    get_data_urls()
-    get_data_to_record()
-    record_data()
-    # Close connections
-    driver.close()
-    driver.quit()
-    LOGGER.info(f"Total time spent {(time.time() - program_start) // 60} min")
+    try:
+        get_data()
+        get_data_urls()
+        get_data_to_record()
+        record_data()
+    finally:
+        # Close connections
+        driver.close()
+        driver.quit()
+        LOGGER.info(f"Total time spent {(time.time() - program_start) // 60} min")
 
-
-if __name__ == '__main__':
-    main()

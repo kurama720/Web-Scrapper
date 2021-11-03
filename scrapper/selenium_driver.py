@@ -6,6 +6,7 @@ from selenium import webdriver
 options = webdriver.ChromeOptions()
 options.add_argument('--disable-notifications')
 options.add_argument('headless')
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
 # Create a driver and add him the options
 driver = webdriver.Chrome(options=options)
 driver.maximize_window()

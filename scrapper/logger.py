@@ -7,11 +7,14 @@ def create_logger():
     # Create logger
     logger = logging.getLogger('scrapper/main.py')
     logger.setLevel(logging.INFO)
-    # Create a handler and a formatter for logger
+    # Create handlers and a formatter for logger
     fh = logging.FileHandler('logs.log', mode='w')
+    fh_console = logging.StreamHandler()
     formatter = logging.Formatter('[%(asctime)s] %(levelname)8s --- %(message)s ' +
                                   '(%(filename)s:%(lineno)s)', datefmt='%Y-%m-%d %H:%M:%S')
-    # Add handler and formatter to logger
+    # Add handlers and formatter to logger
     fh.setFormatter(formatter)
+    fh_console.setFormatter(formatter)
     logger.addHandler(fh)
+    logger.addHandler(fh_console)
     return logger
