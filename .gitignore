@@ -141,4 +141,5 @@ cython_debug/
 reddit*
 *.html
 scrapper/chromedriver.exe
+scrapper/text.txt
 file_info.txt
