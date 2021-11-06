@@ -1,0 +1,5 @@
+
+
+urlpatterns = {
+    '/posts': 'Main page',
+}

@@ -140,6 +140,6 @@ cython_debug/
 .idea
 reddit*
 *.html
-scrapper/chromedriver.exe
+*.exe
 scrapper/text.txt
 file_info.txt

@@ -15,8 +15,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from urllib3.exceptions import MaxRetryError
 
-from selenium_driver import driver
-from logger import create_logger
+from scrapper.selenium_driver import driver
+from scrapper.logger import create_logger
 
 URL: str = 'https://www.reddit.com/top/?t=month'
 
@@ -62,7 +62,7 @@ def get_data_urls() -> NoReturn:
 
     """
     urls_start_time: float = time.time()
-    with open('reddit_source.html', 'r', encoding='utf8') as f:
+    with open(r'D:\iTechArt\scrapper\reddit_source.html', 'r', encoding='utf8') as f:
         src = f.read()
     try:
         # Create connections
@@ -83,12 +83,12 @@ def get_data_urls() -> NoReturn:
         LOGGER.error(f"{ex} occurred in function get_urls()")
 
 
-RECORDING_DATA = []
+recording_data = []
 
 
 def get_data_to_record() -> NoReturn:
     """Parse urls given in two global lists USER_URLS_LIST and POST_URLS_LIST with both BeautifulSoup and Selenium.
-    Pull all the required information and save it into the RECORDING_DATA list.
+    Pull all the required information and save it into the recording_data list.
 
     Info from users' profiles having 18+ limit save as '18+ content'. If author's account has been suspended save as
     'Account has been suspended', If any other problem with pulling data occurs, save element as 'Element was not
@@ -99,10 +99,8 @@ def get_data_to_record() -> NoReturn:
     start_time: float = time.time()
     # Run a cycle to connect post and author's urls
     try:
-        c = 0
-        while c != 5:
+        while len(recording_data) <= 5:
             for i in range(len(POST_URLS_LIST)):
-                c += 1
                 data_to_record: List[str] = []
                 cycle_start_time: float = time.time()
                 # Create all necessary connections for parsing
@@ -118,8 +116,9 @@ def get_data_to_record() -> NoReturn:
                 except TimeoutException:
                     data_to_record.append(str(uuid.uuid4()))
                     data_to_record.append(POST_URLS_LIST[i])
-                    data_to_record.append("Data wasn't loaded, " * 9)
-                    RECORDING_DATA.append(data_to_record)
+                    for j in range(10):
+                        data_to_record.append("Data wasn't loaded")
+                    recording_data.append(data_to_record)
                     LOGGER.error(f'Timeout raised in author element in {i + 1} record')
                     continue
                 # Create an id
@@ -196,8 +195,9 @@ def get_data_to_record() -> NoReturn:
                     WebDriverWait(driver, 10) \
                         .until(ec.presence_of_element_located((By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')))
                 except TimeoutException:
-                    data_to_record.append("data wasn't loaded, " * 3)
-                    RECORDING_DATA.append(data_to_record)
+                    for j in range(4):
+                        data_to_record.append("data wasn't loaded")
+                    recording_data.append(data_to_record)
                     LOGGER.error(f'Timeout raised in post and comment karma element in {i + 1} record')
                     continue
                 try:
@@ -231,12 +231,13 @@ def get_data_to_record() -> NoReturn:
                 except Exception as ex:
                     LOGGER.error(f"{ex} occurred with the element: post_date in {i + 1} record")
                 # Append the list to record with data dict
-                RECORDING_DATA.append(data_to_record)
+                recording_data.append(data_to_record)
                 cycle_end_time: int = int(time.time() - cycle_start_time)
                 if 'Element was not found' not in data_to_record:
                     LOGGER.info(f"Record number {i + 1} was pulled successfully in {cycle_end_time} sec")
                 else:
-                    LOGGER.warning(f"Record number {i + 1} has some unfilled fields, was pulled in {cycle_end_time} sec")
+                    LOGGER.warning(f"Record number {i + 1} has some unfilled fields,"
+                                   f" was pulled in {cycle_end_time} sec")
 
     except MaxRetryError:
         LOGGER.error('Problems with connection occurred')
@@ -249,30 +250,6 @@ def get_data_to_record() -> NoReturn:
         LOGGER.info(f"Recording time spent: {(time.time() - start_time) // 60} min")
 
 
-def record_data():
-    """Create a file named file reddit-YYYY-MM-DD-HH-MM.txt. Save data from the RECORDING_DATA list into the file.
-
-    """
-    current_datetime = datetime.datetime.now()
-    # Create appropriate file name
-    file_name = 'reddit-{year}-{month}-{day}-{hour}h-{minute}m.txt'.format(
-        year=current_datetime.year,
-        month=current_datetime.month,
-        day=current_datetime.day,
-        hour=current_datetime.hour,
-        minute=current_datetime.minute
-    )
-    with open(file_name, 'w', encoding='utf8') as f:
-        for i in RECORDING_DATA:
-            f.write(f"{str(i)}\n")
-    with open('file_info.txt', 'w') as file:
-        file.write(f"{file_name}\n")
-        with open(file_name, 'r') as f:
-            text = f.readlines()
-            size = len(text)
-        file.write(str(f"{size}\n"))
-
-
 def main() -> NoReturn:
     """Execute all functions needed for parsing."""
     program_start: float = time.time()
@@ -280,9 +257,11 @@ def main() -> NoReturn:
         # get_data()
         get_data_urls()
         get_data_to_record()
-        record_data()
+        # record_data()
     finally:
         # Close connections
         driver.close()
         driver.quit()
-        LOGGER.info(f"Total time spent {(time.time() - program_start) // 60} min")
+
+
+main()
