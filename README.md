@@ -6,6 +6,10 @@
 ---
 
 ```$ git clone https://github.com/kurama720/iTechArtLab.git```
+Download _chromedriver.exe_ here _https://chromedriver.chromium.org/downloads_. Choose version according to your
+**Chrome** version.
+Put it in _iTechArt/scrapper_ directory. Write an **absolute path** to the driver in _selenium_driver.py_ in driver
+options.
 
 ## How it works?
 
