@@ -31,11 +31,13 @@ class Server(BaseHTTPRequestHandler):
     def handle_http(self):
         status = 200
         content_type = 'text/html'
-        response_content = ''
+        head = ''
         section = ''
+        if self.path == '/':
+            response_content = '<h1>404 Not Found</h1>'.encode()
 
         if self.path == '/posts':
-            head = '<html><body><h1>Records list</h1>'
+            head += '<html><body><h1>Records list</h1>'
             number = 1
             for data in list1:
                 section += f"record {number}:"
@@ -47,7 +49,7 @@ class Server(BaseHTTPRequestHandler):
             response_content = head.encode() + section.encode() + footer.encode()
 
         else:
-            head = f'<html><body><h1>The record with the UNIQUE ID {self.path.removeprefix("/posts/")}</h1>'
+            head += f'<html><body><h1>The record with the UNIQUE ID {self.path.removeprefix("/posts/")}</h1>'
             for record in list1:
                 if self.path.removeprefix('/posts/') in record['UNIQUE ID']:
                     section += '<p>'
