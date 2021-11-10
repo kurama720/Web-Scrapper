@@ -37,7 +37,7 @@ def get_data() -> NoReturn:
         while True:
             # Scroll page until there is 100 posts on it.
             if len(driver.find_elements(By.CLASS_NAME, '_1oQyIsiPHYt6nx7VOmd1sz')) == 100:
-                with open('reddit_source.html', 'w', encoding='utf8') as f:
+                with open(r'D:\iTechArt\scrapper\reddit_source.html', 'w', encoding='utf8') as f:
                     f.write(driver.page_source)
                 break
             else:
@@ -238,10 +238,6 @@ def get_data_to_record() -> NoReturn:
                 else:
                     LOGGER.warning(f"Record number {i + 1} has some unfilled fields,"
                                    f" was pulled in {cycle_end_time} sec")
-                if len(recording_data) >= 2:
-                    break
-            if len(recording_data) >= 2:
-                break
 
     except MaxRetryError:
         LOGGER.error('Problems with connection occurred')
