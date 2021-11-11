@@ -238,6 +238,10 @@ def get_data_to_record() -> NoReturn:
                 else:
                     LOGGER.warning(f"Record number {i + 1} has some unfilled fields,"
                                    f" was pulled in {cycle_end_time} sec")
+                if len(recording_data) >= 2:
+                    break
+            if len(recording_data) >= 2:
+                break
 
     except MaxRetryError:
         LOGGER.error('Problems with connection occurred')
