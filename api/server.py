@@ -1,11 +1,10 @@
-import cgi
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from uuid import uuid4
+import re
 
 import scrapper.main
-from forms import form
 
 FIELDS = ['UNIQUE ID', 'POST URL', 'AUTHOR', 'USER KARMA', 'CAKE DAY', 'COMMENTS NUMBER', 'VOTES NUMBER',
           'POST CATEGORY', 'POST KARMA', 'COMMENT KARMA', 'POST DATE']
@@ -14,7 +13,6 @@ jsoned_records = []
 
 
 def get_data():
-    # from scrapper.main import recording_data
     for record in scrapper.main.recording_data:
         i = 0
         dict_record = {}
@@ -24,11 +22,10 @@ def get_data():
         jsoned_records.append(dict_record)
 
 
-IDS_LIST = [record['UNIQUE ID'] for record in jsoned_records]
-
-
 class Server(BaseHTTPRequestHandler):
     def do_GET(self):
+        self.record_data()
+        self.make_ids()
         section = ''
         footer = '</body></html>'
 
@@ -46,10 +43,9 @@ class Server(BaseHTTPRequestHandler):
             response_content = head.encode() + section.encode() + footer.encode()
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.record_data()
             self.wfile.write(response_content)
 
-        elif self.path.removeprefix('/posts/') in IDS_LIST:
+        elif self.path.removeprefix('/posts/') in self.make_ids():
             self.send_response(200)
             head = f'<html><body>'
             for record in jsoned_records:
@@ -57,63 +53,98 @@ class Server(BaseHTTPRequestHandler):
                     section += '<p>'
                     section += json.dumps(record)
                     section += '</p>'
-                else:
-                    continue
+            if section == '':
+                section += '<p>No record with such id</p>'
             response_content = head.encode() + section.encode() + footer.encode()
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.record_data()
             self.wfile.write(response_content)
-
-        elif self.path.removeprefix('/posts/') == 'new':
-            self.send_response(200)
-            head = '<html><body>'
-            section += form
-            response_content = head.encode() + section.encode() + footer.encode()
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.record_data()
-            self.wfile.write(response_content)
-
         else:
             self.send_response(404)
 
     def do_POST(self):
-        if self.path.endswith('/new'):
-            ctype, pdict = cgi.parse_header(self.headers.get('Content-type'))
-            pdict['boundary'] = bytes(pdict["boundary"], 'utf-8')
-            fields = cgi.parse_multipart(self.rfile, pdict)
-            income_data = {'UNIQUE ID': str(uuid4()), 'POST URL': fields.get('POST URL')[0],
-                           'AUTHOR': fields.get('AUTHOR')[0], 'USER KARMA': fields.get('USER KARMA')[0],
-                           'CAKE DAY': fields.get('CAKE DAY')[0], 'COMMENTS NUMBER': fields.get('COMMENTS NUMBER')[0],
-                           'VOTES NUMBER': fields.get('VOTES NUMBER')[0],
-                           'POST CATEGORY': fields.get('POST CATEGORY')[0], 'POST KARMA': fields.get('POST KARMA')[0],
-                           'COMMENT KARMA': fields.get('COMMENT KARMA')[0], 'POST DATE': fields.get('POST DATE')[0]}
-            if income_data['UNIQUE ID'] not in IDS_LIST:
-                jsoned_records.append(income_data)
-                with open(self.record_data(), 'a', encoding='utf-8') as f:
-                    f.write(str(income_data))
-                self.send_response(201)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-                raw_number = 0
-                with open(self.record_data(), 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                    for line in lines:
-                        if income_data['UNIQUE ID'] in line:
-                            raw_number += len(lines)
-                output = {income_data['UNIQUE ID']: raw_number}
-                self.wfile.write(json.dumps(output).encode())
-            else:
-                raise ValueError
+        content_len = int(self.headers.get('Content-Length'))
+        content = self.rfile.read(content_len).decode().replace('+', ' ').split('&')
+        income_data = {'UNIQUE ID': str(uuid4()),
+                       'POST URL': [i.removeprefix('POST_URL=') for i in content if 'POST_URL' in i][0],
+                       'AUTHOR': [i.removeprefix('AUTHOR=') for i in content if 'AUTHOR' in i][0],
+                       'USER KARMA': [i.removeprefix('USER KARMA=') for i in content if 'USER KARMA' in i][0],
+                       'CAKE DAY': [i.removeprefix('CAKE DAY=') for i in content if 'CAKE DAY' in i][0],
+                       'COMMENTS NUMBER': [i.removeprefix('COMMENTS NUMBER=') for i in content if 'COMMENTS NUMBER'
+                                           in i][0],
+                       'VOTES NUMBER': [i.removeprefix('VOTES NUMBER=') for i in content if 'VOTES NUMBER' in i][0],
+                       'POST CATEGORY': [i.removeprefix('POST CATEGORY=') for i in content if 'POST CATEGORY'
+                                         in i][0],
+                       'POST KARMA': [i.removeprefix('POST KARMA=') for i in content if 'POST KARMA' in i][0],
+                       'COMMENT KARMA': [i.removeprefix('COMMENT KARMA=') for i in content if 'COMMENT KARMA'
+                                         in i][0],
+                       'POST DATE': [i.removeprefix('POST DATE=') for i in content if 'POST DATE' in i][0]
+                       }
+        if income_data['UNIQUE ID'] not in self.make_ids():
+            jsoned_records.append(income_data)
+            with open(self.record_data(), 'a', encoding='utf-8') as f:
+                f.write(str(income_data))
+            raw_number = 0
+            with open(self.record_data(), 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                for line in lines:
+                    if income_data['UNIQUE ID'] in line:
+                        raw_number += len(lines)
+            output = {income_data['UNIQUE ID']: raw_number}
+            self.send_response(201)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(json.dumps(output).encode())
+        else:
+            self.wfile.write('Record with such id exists already'.encode())
+
+    def do_PUT(self):
+        if self.path.removeprefix('/posts/') not in self.make_ids():
+            self.send_response(404)
+        else:
+            content_len = int(self.headers.get('Content-Length'))
+            content = self.rfile.read(content_len).decode().replace('+', ' ').split('&')
+            for record in jsoned_records:
+                if self.path.removeprefix('/posts/') == record['UNIQUE ID']:
+                    if re.search('POST URL', str(content)) is not None:
+                        record['POST URL'] = [i.removeprefix('POST_URL=') for i in content if 'POST_URL' in i][0]
+                    if re.search('AUTHOR', str(content)) is not None:
+                        record['AUTHOR'] = [i.removeprefix('AUTHOR=') for i in content if 'AUTHOR' in i][0]
+                    if re.search('USER KARMA', str(content)) is not None:
+                        record['USER KARMA'] = [i.removeprefix('USER KARMA=') for i in content if 'USER KARMA' in i][0]
+                    if re.search('CAKE DAY', str(content)) is not None:
+                        record['CAKE DAY'] = [i.removeprefix('CAKE DAY=') for i in content if 'CAKE DAY' in i][0]
+                    if re.search('COMMENTS NUMBER', str(content)) is not None:
+                        record['COMMENTS NUMBER'] = [i.removeprefix('COMMENTS NUMBER=') for i in content if
+                                                     'COMMENTS NUMBER' in i][0]
+                    if re.search('VOTES NUMBER', str(content)) is not None:
+                        record['VOTES NUMBER'] = [i.removeprefix('VOTES NUMBER=') for i in content if 'VOTES NUMBER'
+                                                  in i][0]
+                    if re.search('POST CATEGORY', str(content)) is not None:
+                        record['POST CATEGORY'] = [i.removeprefix('POST CATEGORY=') for i in content if 'POST CATEGORY'
+                                                   in i][0]
+                    if re.search('POST KARMA', str(content)) is not None:
+                        record['POST KARMA'] = [i.removeprefix('POST KARMA=') for i in content if 'POST KARMA' in i][0]
+                    if re.search('COMMENT KARMA', str(content)) is not None:
+                        record['COMMENT KARMA'] = [i.removeprefix('COMMENT KARMA=') for i in content if 'COMMENT KARMA'
+                                                   in i][0]
+                    if re.search('POST DATE', str(content)) is not None:
+                        record['POST DATE'] = [i.removeprefix('POST DATE=') for i in content if 'POST DATE' in i][0]
+                    self.record_data()
+            self.send_response(201)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
 
     def do_DELETE(self):
-        self.send_response(200)
-        for record in jsoned_records:
-            if self.path.removeprefix('/posts/') in record['UNIQUE ID']:
-                jsoned_records.remove(record)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+        if self.path.removeprefix('/posts/') not in self.make_ids():
+            self.send_response(404)
+        else:
+            for record in jsoned_records:
+                if self.path.removeprefix('/posts/') in record['UNIQUE ID']:
+                    jsoned_records.remove(record)
+            self.send_response(201)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
 
     @staticmethod
     def record_data():
@@ -135,6 +166,11 @@ class Server(BaseHTTPRequestHandler):
             file.write(str(f"{size}\n"))
 
         return file_name
+
+    @staticmethod
+    def make_ids():
+        ids_list = [record['UNIQUE ID'] for record in jsoned_records]
+        return ids_list
 
 
 def main():
