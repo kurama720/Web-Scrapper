@@ -1,18 +1,17 @@
 """Module for working from console. Uses standard module argparse.
-
 """
 
 import argparse
 
 # Create a parser
-PARSER = argparse.ArgumentParser(description='Executing the scrapper')
-PARSER.add_argument('-a', '--action',
-                    help='"run" - to execute the program; "file" to know the file name";'
-                         ' "rows" - to know the amount of records')
+PARSER = argparse.ArgumentParser()
+PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'file', 'rows', 'logs'],
+                    help='<runserver> - to execute the program; <file> to know the file name; <rows> - to know the'
+                         ' amount of records; <logs> to show logs')
 ARGS = PARSER.parse_args()
 # Catch keywords from commandline.
-if ARGS.action == 'run':
-    from main import main
+if ARGS.action == 'runserver':
+    from api.server import main
     main()
 elif ARGS.action == 'file':
     with open('file_info.txt', 'r') as f:

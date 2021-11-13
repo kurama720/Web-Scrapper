@@ -13,4 +13,3 @@ data_to_update = {'AUTHOR': 'slava', 'VOTES NUMBER': 'no votes found'}
 requests.delete(url=url_with_id)
 requests.put(url=url_with_id, data=data_to_update)
 requests.post(url=url, data=data)
-

@@ -24,11 +24,14 @@ minute. Scrapping takes ~15 minutes.**
 ## How to run?
 
 ---
-Execute this in the folder iTechArt/scrapper:
-```$ python execute.py -a run```
+Execute this in the folder iTechArt/:
+```$ python execute.py -a runserver```
 
 To find out file name:
 ```$ python execute.py -a file```
 
 To find out amount of records:
 ```$ python execute.py -a rows```
+
+To show logs:
+```$ python execute.py -a logs```
