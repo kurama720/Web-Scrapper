@@ -192,6 +192,7 @@ def main() -> NoReturn:
         get_data_to_record()
     finally:
         # Close connections
+        print(recording_data)
         driver.close()
         driver.quit()
 
