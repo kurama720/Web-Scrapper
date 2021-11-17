@@ -87,7 +87,7 @@ recording_data = []
 
 
 @exception_handler
-def get_data_to_record():
+def get_data_to_record(records_amount):
     """Parse urls given in two global lists USER_URLS_LIST and POST_URLS_LIST with both BeautifulSoup and Selenium.
     Pull all the required information and save it into the recording_data list.
 
@@ -178,23 +178,22 @@ def get_data_to_record():
                 LOGGER.info(f"Record number {i + 1} was pulled successfully in {cycle_end_time} sec")
             else:
                 LOGGER.warning(f"Record number {i + 1} has some unfilled fields, was pulled in {cycle_end_time} sec")
-            if len(recording_data) >= 2:
+            if len(recording_data) >= records_amount:
                 break
 
     find_elements()
 
 
-def main() -> NoReturn:
+def main(records_amount) -> NoReturn:
     """Execute all functions needed for parsing."""
     try:
         get_data()
         get_data_urls()
-        get_data_to_record()
+        get_data_to_record(records_amount)
     finally:
         # Close connections
-        print(recording_data)
         driver.close()
         driver.quit()
 
 
-main()
+main(2)

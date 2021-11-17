@@ -4,7 +4,7 @@ import json
 from uuid import uuid4
 import re
 
-import scrapper.main
+from scrapper import main as m
 
 FIELDS = ['UNIQUE ID', 'POST URL', 'AUTHOR', 'USER KARMA', 'CAKE DAY', 'COMMENTS NUMBER', 'VOTES NUMBER',
           'POST CATEGORY', 'POST KARMA', 'COMMENT KARMA', 'POST DATE']
@@ -13,7 +13,7 @@ jsoned_records = []
 
 
 def get_data():
-    for record in scrapper.main.recording_data:
+    for record in m.recording_data:
         i = 0
         dict_record = {}
         while i < len(FIELDS):
