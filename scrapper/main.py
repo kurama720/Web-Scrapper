@@ -198,6 +198,3 @@ def main(records_amount) -> NoReturn:
         # Close connections
         driver.close()
         driver.quit()
-
-
-main(2)
