@@ -32,8 +32,10 @@ def inner_exception_handler(func):
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
-        except (AttributeError, NoSuchElementException):
+        except NoSuchElementException:
             LOGGER_HANDLER.error(f"Some elements were not found in a record")
+        except AttributeError:
+            LOGGER_HANDLER.error(f"Problems with data type occurred")
         except WebDriverException as ex:
             LOGGER_HANDLER.error(f"{ex} occurred in a record")
         except Exception as ex:
