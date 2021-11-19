@@ -3,9 +3,11 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from uuid import uuid4
 
+from scrapper.logger import create_logger
 
 jsoned_records = []
 
+LOGGER = create_logger()
 
 class Server(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -95,7 +97,6 @@ class Server(BaseHTTPRequestHandler):
         for k, v in old_record.items():
             if k == key:
                 old_record[k] = new_value
-                print(old_record)
                 return old_record
 
     @staticmethod
@@ -131,7 +132,7 @@ class Server(BaseHTTPRequestHandler):
 def main():
     port = 8087
     server = HTTPServer(('', port), Server)
-    print('Server running on port: %s' % port)
+    LOGGER.info('Server running on port: %s' % port)
     server.serve_forever()
 
 
