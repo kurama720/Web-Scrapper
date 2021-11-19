@@ -5,9 +5,10 @@ from uuid import uuid4
 
 from scrapper.logger import create_logger
 
-jsoned_records = []
+posted_records = []
 
 LOGGER = create_logger()
+
 
 class Server(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -15,18 +16,18 @@ class Server(BaseHTTPRequestHandler):
         self.make_ids()
 
         if self.path == '/posts':
-            if len(jsoned_records) == 0:
+            if len(posted_records) == 0:
                 self.send_response(404)
             else:
                 self.send_response(200)
                 self.send_header('Content-type', 'text/json')
                 self.end_headers()
-                for data in jsoned_records:
+                for data in posted_records:
                     self.wfile.write(data.encode())
 
         elif self.path.removeprefix('/posts/') in self.make_ids():
             output = ''
-            for data in jsoned_records:
+            for data in posted_records:
                 if self.path.removeprefix('/posts/') in json.loads(data)['UNIQUE ID']:
                     output += data
                     if output == '':
@@ -45,7 +46,7 @@ class Server(BaseHTTPRequestHandler):
         content = json.loads(content)
         content['UNIQUE ID'] = str(uuid4())
         if content['UNIQUE ID'] not in self.make_ids():
-            jsoned_records.append(json.dumps(content))
+            posted_records.append(json.dumps(content))
             with open(self.record_data(), 'a', encoding='utf-8') as f:
                 f.write(json.dumps(content))
             raw_number = 0
@@ -68,13 +69,13 @@ class Server(BaseHTTPRequestHandler):
         else:
             content_len = int(self.headers.get('Content-Length'))
             content = self.rfile.read(content_len).decode()
-            for record in jsoned_records:
+            for record in posted_records:
                 if self.path.removeprefix('/posts/') == json.loads(record)['UNIQUE ID']:
-                    place = jsoned_records.index(record)
+                    place = posted_records.index(record)
                     for key, new_value in json.loads(content).items():
                         updated_record = self.update_record(record, key, new_value)
-                        jsoned_records.remove(record)
-                        jsoned_records.insert(place, json.dumps(updated_record))
+                        posted_records.remove(record)
+                        posted_records.insert(place, json.dumps(updated_record))
                     self.record_data()
             self.send_response(201)
             self.send_header('Content-type', 'text/json')
@@ -84,9 +85,9 @@ class Server(BaseHTTPRequestHandler):
         if self.path.removeprefix('/posts/') not in self.make_ids():
             self.send_response(404)
         else:
-            for record in jsoned_records:
+            for record in posted_records:
                 if self.path.removeprefix('/posts/') in json.loads(record)['UNIQUE ID']:
-                    jsoned_records.remove(record)
+                    posted_records.remove(record)
             self.send_response(201)
             self.send_header('Content-type', 'text/json')
             self.end_headers()
@@ -109,7 +110,7 @@ class Server(BaseHTTPRequestHandler):
             day=current_datetime.day,
         )
         with open(file_name, 'w', encoding='utf8') as f:
-            for i in jsoned_records:
+            for i in posted_records:
                 f.write(f"{str(i)}\n")
         with open('file_info.txt', 'w') as file:
             file.write(f"{file_name}\n")
@@ -123,7 +124,7 @@ class Server(BaseHTTPRequestHandler):
     @staticmethod
     def make_ids():
         ids_list = []
-        for record in jsoned_records:
+        for record in posted_records:
             record = json.loads(record)
             ids_list.append(record['UNIQUE ID'])
         return ids_list

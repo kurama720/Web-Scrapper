@@ -39,7 +39,7 @@ def get_data() -> NoReturn:
         while True:
             # Scroll page until there is 100 posts on it.
             if len(driver.find_elements(By.CLASS_NAME, '_1oQyIsiPHYt6nx7VOmd1sz')) == 100:
-                with open(r'D:\iTechArt\scrapper\reddit_source.html', 'w', encoding='utf8') as f:
+                with open('reddit_source.html', 'w', encoding='utf8') as f:
                     f.write(driver.page_source)
                 break
             else:
@@ -64,7 +64,7 @@ def get_data_urls() -> NoReturn:
 
     """
     urls_start_time: float = time.time()
-    with open(r'D:\iTechArt\scrapper\reddit_source.html', 'r', encoding='utf8') as f:
+    with open('reddit_source.html', 'r', encoding='utf8') as f:
         src = f.read()
     try:
         # Create connections
@@ -112,13 +112,12 @@ def get_data_to_record(records_amount):
             soup_user = BeautifulSoup(response_user.content, 'lxml')
             # Wait until data is loaded on a page
             try:
-                WebDriverWait(driver, 10) \
+                WebDriverWait(driver, 20) \
                     .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
                 # Create an id
                 data_to_record['POST URL'] = POST_URLS_LIST[i]
                 # Find author's username
-                data_to_record['AUTHOR']: str = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG').text \
-                    .removeprefix('u/')
+                data_to_record['AUTHOR']: str = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG').text[2:]
                 # Check if author's profile has 18+ limit
                 if soup_user.find('h3', text='You must be 18+ to view this community'):
                     data_to_record['USER KARMA']: str = '18+ profile'
@@ -140,10 +139,10 @@ def get_data_to_record(records_amount):
                 data_to_record['VOTES NUMBER']: str = driver.find_element(By.CLASS_NAME, '_1rZYMD_4xY3gRcSS3p8ODO').text
                 # Find post category and remove the prefix r/
                 data_to_record['POST CATEGORY']: str = driver.find_element(By.CLASS_NAME, '_19bCWnxeTjqzBElWZfIlJb') \
-                    .get_property('title').removeprefix('r/')
+                    .get_property('title')[2:]
                 # Use selenium to imitate cursor freezing to load other information and wait until it loads
                 action.move_to_element(driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')).perform()
-                WebDriverWait(driver, 10) \
+                WebDriverWait(driver, 20) \
                     .until(ec.presence_of_element_located((By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')))
                 # Find list of post and comment karma
                 post_and_comment_karma: List = driver.find_elements(By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')
@@ -163,7 +162,7 @@ def get_data_to_record(records_amount):
                 # try to refresh the page
                 try:
                     driver.refresh()
-                    WebDriverWait(driver, 10) \
+                    WebDriverWait(driver, 20) \
                         .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
                 # if exception raises anyway, provide fields with "data wasn't loaded"
                 except TimeoutException:
@@ -191,7 +190,7 @@ def get_data_to_record(records_amount):
 def main(records_amount) -> NoReturn:
     """Execute all functions needed for parsing."""
     try:
-        # get_data()
+        get_data()
         get_data_urls()
         get_data_to_record(records_amount)
     finally:
