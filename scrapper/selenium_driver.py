@@ -9,6 +9,6 @@ options.add_argument('headless')
 options.add_experimental_option('excludeSwitches', ['enable-logging'])
 # Create a driver and add him the options
 # Write an absolute path to driver here
-driver = webdriver.Chrome(options=options, executable_path=r'D:\iTechArt\scrapper\chromedriver.exe')
+driver = webdriver.Chrome(options=options, executable_path='')
 driver.maximize_window()
 driver.implicitly_wait(20)
