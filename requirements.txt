@@ -18,6 +18,7 @@ outcome==1.1.0
 parse==1.19.0
 pycparser==2.21
 pyee==8.2.2
+pymongo==3.12.1
 pyppeteer==0.2.6
 pyquery==1.4.3
 requests==2.26.0
