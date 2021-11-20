@@ -1,3 +1,5 @@
+"""Module is used for running server and processing request methods: GET, POST, PUT, DELETE"""
+
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
@@ -11,6 +13,9 @@ LOGGER = create_logger()
 
 
 class Server(BaseHTTPRequestHandler):
+    """Server itself. All request methods implemented here"""
+
+    # Process GET request method
     def do_GET(self):
         self.record_data()
         self.make_ids()
@@ -40,6 +45,7 @@ class Server(BaseHTTPRequestHandler):
         else:
             self.send_response(404)
 
+    # Process POST request method
     def do_POST(self):
         content_len = int(self.headers.get('Content-Length'))
         content = self.rfile.read(content_len).decode()
@@ -63,6 +69,7 @@ class Server(BaseHTTPRequestHandler):
         else:
             self.wfile.write('Record with such id exists already'.encode())
 
+    # Process PUT request method
     def do_PUT(self):
         if self.path.removeprefix('/posts/') not in self.make_ids():
             self.send_response(404)
@@ -81,6 +88,7 @@ class Server(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/json')
             self.end_headers()
 
+    # Process DELETE request method
     def do_DELETE(self):
         if self.path.removeprefix('/posts/') not in self.make_ids():
             self.send_response(404)
@@ -92,8 +100,10 @@ class Server(BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/json')
             self.end_headers()
 
+    #
     @staticmethod
     def update_record(old_record, key, new_value):
+        """Function for PUT request. Takes record to update, key and new value for that key."""
         old_record = json.loads(old_record)
         for k, v in old_record.items():
             if k == key:
@@ -102,6 +112,7 @@ class Server(BaseHTTPRequestHandler):
 
     @staticmethod
     def record_data():
+        """Save all records into a file."""
         current_datetime = datetime.now()
         # Create appropriate file name
         file_name = 'reddit-{year}-{month}-{day}.json'.format(
@@ -123,6 +134,7 @@ class Server(BaseHTTPRequestHandler):
 
     @staticmethod
     def make_ids():
+        """Collect all records' ids, then use the list to check whether record already exists or not"""
         ids_list = []
         for record in posted_records:
             record = json.loads(record)
@@ -131,9 +143,8 @@ class Server(BaseHTTPRequestHandler):
 
 
 def main():
-    port = 8087
-    server = HTTPServer(('', port), Server)
-    LOGGER.info('Server running on port: %s' % port)
+    server = HTTPServer(('', 8087), Server)
+    LOGGER.info('Server running on port: 8087')
     server.serve_forever()
 
 
