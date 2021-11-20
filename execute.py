@@ -1,4 +1,4 @@
-"""Module for working from console. Uses standard module argparse.
+"""Module for running program from console. Uses module argparse.
 """
 
 import argparse
