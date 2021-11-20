@@ -30,14 +30,18 @@ Creates API processing request methods as GET, POST, PUT, DELETE. Takes data fro
 ## How to run?
 
 ---
-To run server execute this in the folder iTechArt/:  
+To run server execute this in the folder iTechArt/:
 ```$ python execute.py -a runserver```  
+
 To run scrapper execute this, where -r takes an amount of records to be pulled:  
 ```$ python execute.py -r <amount> -a runscrapper```  
+
 To find out file name:  
 ```$ python execute.py -a file```  
+
 To find out amount of records:  
 ```$ python execute.py -a rows```  
+
 To show logs:  
 ```$ python execute.py -a logs```
 

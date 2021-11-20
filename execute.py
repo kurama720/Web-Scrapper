@@ -7,8 +7,8 @@ import argparse
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('-r', '--records_amount', type=int, help='How many records to pull')
 PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'runscrapper', 'file', 'rows', 'logs'],
-                    help='<runserver> - to execute the program; <file> to know the file name; <rows> - to know the'
-                         ' amount of records; <logs> to show logs')
+                    help='<runserver> - to execute the program; <runscrapper> - to run the scrapper; <file> to know the'
+                         ' file name; <rows> - to know the amount of records; <logs> to show logs')
 args = PARSER.parse_args()
 # Catch keywords from commandline.
 if args.action == 'runserver':
