@@ -1,5 +1,5 @@
-"""Main module of scrapper. Most of the logic is here.
-
+"""Main module of scrapper. Scrolls Top -> Month, saves it in to html code file. Collect author's and post's urls from
+file. Parses them with BS4 and Selenium, then saves it in database.
 """
 import uuid
 import time
@@ -25,10 +25,10 @@ URL: str = 'https://www.reddit.com/top/?t=month'
 LOGGER = create_logger()
 
 
-def get_data() -> NoReturn:
-    """Parse reddit.com with Selenium.
+def get_data(records_amount) -> NoReturn:
+    """Parse reddit.com with Selenium. Take amount of records to be pulled
 
-    Scroll until find 100 posts, then save given html-code into a file reddit_source.html
+     Scroll until find given amount posts, then save given html code into a file reddit_source.html
 
     """
     scroll_time_start: float = time.time()
@@ -38,7 +38,7 @@ def get_data() -> NoReturn:
         driver.get(url=URL)
         while True:
             # Scroll page until there is 100 posts on it.
-            if len(driver.find_elements(By.CLASS_NAME, '_1oQyIsiPHYt6nx7VOmd1sz')) == 100:
+            if len(driver.find_elements(By.CLASS_NAME, '_1oQyIsiPHYt6nx7VOmd1sz')) >= records_amount:
                 with open('reddit_source.html', 'w', encoding='utf8') as f:
                     f.write(driver.page_source)
                 break
@@ -85,18 +85,13 @@ def get_data_urls() -> NoReturn:
         LOGGER.error(f"{ex} occurred in function get_urls()")
 
 
-RECORDING_DATA = []
 api_URL = 'http://127.0.0.1:8087/posts'
 
 
 @exception_handler
-def get_data_to_record(records_amount):
+def get_data_to_record():
     """Parse urls given in two global lists USER_URLS_LIST and POST_URLS_LIST with both BeautifulSoup and Selenium.
-    Pull all the required information and save it into the RECORDING_DATA list.
-    Info from users' profiles having 18+ limit save as '18+ content'. If author's account has been suspended save as
-    'Account has been suspended', If any other problem with pulling data occurs, save element as 'Element was not
-    found'. Exceptions related to not finding data are caught. Exceptions related to connection mostly occur due to
-    closing driver before function executed.
+    Pull all the required information and save it into database.
     """
     # Run a cycle to connect post and author's urls
     @inner_exception_handler
@@ -173,7 +168,6 @@ def get_data_to_record(records_amount):
                                                                         'POST CATEGORY', 'POST KARMA', 'COMMENT KARMA',
                                                                         'POST DATE']}
             finally:
-                RECORDING_DATA.append(data_to_record)
                 requests.post(url=api_URL, data=json.dumps(data_to_record))
 
             cycle_end_time: int = int(time.time() - cycle_start_time)
@@ -181,8 +175,6 @@ def get_data_to_record(records_amount):
                 LOGGER.info(f"Record number {i + 1} was pulled successfully in {cycle_end_time} sec")
             else:
                 LOGGER.warning(f"Record number {i + 1} has some unfilled fields, was pulled in {cycle_end_time} sec")
-            if len(RECORDING_DATA) >= records_amount:
-                break
 
     find_elements()
 
@@ -190,9 +182,9 @@ def get_data_to_record(records_amount):
 def main(records_amount) -> NoReturn:
     """Execute all functions needed for parsing."""
     try:
-        get_data()
+        get_data(records_amount)
         get_data_urls()
-        get_data_to_record(records_amount)
+        get_data_to_record()
     finally:
         # Close connections
         driver.close()
