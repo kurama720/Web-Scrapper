@@ -3,6 +3,7 @@
 ---
 ## What does it use?
 - **Python 3.8**
+- **Psycopg2**
 - **Selenium**
 - **BeautifulSoup**
 - **Git**
