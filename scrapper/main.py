@@ -1,11 +1,13 @@
 """Main module of scrapper. Scrolls Top -> Month, saves it in to html code file. Collect author's and post's urls from
 file. Parses them with BS4 and Selenium, then saves it in database.
 """
+import json
 from uuid import uuid4
 import time
 import datetime
 from typing import List, NoReturn, Dict
 
+import requests
 from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import TimeoutException
@@ -17,8 +19,6 @@ from selenium.webdriver.support import expected_conditions as ec
 from scrapper.selenium_driver import driver
 from scrapper.logger import create_logger
 from scrapper.handlers import exception_handler, inner_exception_handler
-from database.db_connection import posts_collection
-from database.db_requests import insert_document
 
 URL: str = 'https://www.reddit.com/top/?t=month'
 
@@ -85,12 +85,14 @@ def get_data_urls() -> NoReturn:
         LOGGER.error(f"{ex} occurred in function get_urls()")
 
 
+api_URL = 'http://127.0.0.1:8087/posts'
+
+
 @exception_handler
 def get_data_to_record():
     """Parse urls given in two global lists USER_URLS_LIST and POST_URLS_LIST with both BeautifulSoup and Selenium.
-    Pull all the required information and save it into database.
+    Pull all the required information and send data to API.
     """
-
     # Run a cycle to connect post and author's urls
     @inner_exception_handler
     def find_elements():
@@ -150,7 +152,6 @@ def get_data_to_record():
                 delta = datetime.timedelta(days=(int(''.join(amount))))
                 current_date = current_date - delta
                 data_to_record['POST DATE'] = f"{current_date.day}-{current_date.month}-{current_date.year}"
-                data_to_record['_id'] = str(uuid4())
 
             except TimeoutException:
                 # try to refresh the page
@@ -160,14 +161,14 @@ def get_data_to_record():
                         .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
                 # if exception raises anyway, provide fields with "data wasn't loaded"
                 except TimeoutException:
+                    data_to_record['UNIQUE ID'] = str(uuid4())
                     data_to_record['POST URL'] = POST_URLS_LIST[i]
                     data_to_record = {k: "data wasn't loaded" for k in ['AUTHOR', 'USER KARMA', 'CAKE DAY',
                                                                         'COMMENTS NUMBER', 'VOTES NUMBER',
                                                                         'POST CATEGORY', 'POST KARMA', 'COMMENT KARMA',
                                                                         'POST DATE']}
             finally:
-                # Save data to database
-                insert_document(posts_collection, data_to_record)
+                requests.post(url=api_URL, data=json.dumps(data_to_record))
 
             cycle_end_time: int = int(time.time() - cycle_start_time)
             if '' not in data_to_record.values():
