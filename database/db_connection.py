@@ -8,15 +8,19 @@ from psycopg2 import extensions
 def create_database():
     """Create database"""
     # Connect to server
-    connection = psycopg2.connect(user="root",
-                                  password="12345",
+    # Type your username, password and existing database
+    connection = psycopg2.connect(user="",
+                                  password="",
                                   host="127.0.0.1",
-                                  port="5432")
+                                  port="5432",
+                                  database="")
     connection.set_isolation_level(extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = connection.cursor()
     # Create database
-    sql_create_database = 'CREATE DATABASE reddit_scrapper'
-    cursor.execute(sql_create_database)
+    cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = 'reddit_scrapper'")
+    exists = cursor.fetchone()
+    if not exists:
+        cursor.execute('CREATE DATABASE reddit_scrapper')
     # Close connections
     cursor.close()
     connection.close()
@@ -25,10 +29,11 @@ def create_database():
 def create_connection():
     """Connect to database and return the connection"""
     db_name = 'reddit_scrapper'
+    # Type your username and password to connect to database reddit_scrapper
     con = psycopg2.connect(
         database=db_name,
-        user="root",
-        password="12345",
+        user="",
+        password="",
         host="127.0.0.1",
         port="5432"
     )
@@ -68,7 +73,6 @@ def create_table():
 
 def main():
     create_database()
-    create_connection()
     create_table()
 
 
