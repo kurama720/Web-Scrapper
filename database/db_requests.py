@@ -1,8 +1,11 @@
 """Module implements processing requests to database. """
 from database.db_connection import create_connection
 
-CONNECTION = create_connection()
-CURSOR = CONNECTION.cursor()
+try:
+    CONNECTION = create_connection()
+    CURSOR = CONNECTION.cursor()
+except AttributeError:
+    pass
 
 
 def insert_record(data: dict):

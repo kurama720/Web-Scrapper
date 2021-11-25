@@ -1,5 +1,5 @@
 """Main module of scrapper. Scrolls Top -> Month, saves it in to html code file. Collect author's and post's urls from
-file. Parses them with BS4 and Selenium, then send POST request to API with pulled records..
+file. Parses them with BS4 and Selenium, then send POST request to API with pulled records.
 """
 import uuid
 import time
