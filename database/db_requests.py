@@ -13,8 +13,8 @@ def insert_record(data: dict):
     save_author_data = '''INSERT INTO author (name, user_karma, cake_day, post_karma, comment_karma) VALUES
                           (%s, %s, %s, %s, %s)
                        '''
-    save_post_data = '''INSERT INTO post (post_url, comments_number, votes_number, post_category, post_date, author_name)
-     VALUES (%s, %s, %s, %s, %s, %s) 
+    save_post_data = '''INSERT INTO post (post_url, comments_number, votes_number, post_category, post_date,
+                     author_name) VALUES (%s, %s, %s, %s, %s, %s) 
                      '''
     author_fields = ["AUTHOR", "USER KARMA", "CAKE DAY", "POST KARMA", "COMMENT KARMA"]
     post_fields = ['POST URL', 'COMMENTS NUMBER', 'VOTES NUMBER', 'POST CATEGORY', 'POST DATE']
