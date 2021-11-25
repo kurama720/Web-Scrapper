@@ -24,7 +24,9 @@
 It parses **reddit.com** with _BeautifulSoup_ and _Selenium_. Searches for given amount of posts in category _Top ->
 This Month_. Pulls such info as: _post URL_, _author's username_, _author's karma_, _cake day_, _post karma_,
 _comment karma_, _post date_, _number of comments_, _number of votes_ and _post category_. Also assigns a _unique id_
-for each record with _uuid_. Saves data in MongoDB, _posts_ collection. Scrapping takes ~15 minutes.
+for each record with _uuid_.  
+Divides data on author data and post data. Saves it in MongoDB, _author_ and _posts_.  
+Scrapping takes ~15 minutes.  
 Creates API processing request methods as GET, POST, PUT, DELETE. Takes data from database.
 
 ## How to run?
@@ -34,13 +36,7 @@ To run server execute this in the folder iTechArt/:
 ```$ python execute.py -a runserver```  
 
 To run scrapper execute this, where -r takes an amount of records to be pulled:  
-```$ python execute.py -r <amount> -a runscrapper```  
-
-To find out file name:  
-```$ python execute.py -a file```  
-
-To find out amount of records:  
-```$ python execute.py -a rows```  
+```$ python execute.py -r <amount> -a runscrapper```   
 
 To show logs:  
 ```$ python execute.py -a logs```
