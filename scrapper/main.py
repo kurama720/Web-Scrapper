@@ -1,5 +1,5 @@
 """Main module of scrapper. Scrolls Top -> Month, saves it in to html code file. Collect author's and post's urls from
-file. Parses them with BS4 and Selenium, then saves it in database.
+file. Parses them with BS4 and Selenium, then sends it to API.
 """
 import json
 from uuid import uuid4
@@ -89,14 +89,19 @@ api_URL = 'http://127.0.0.1:8087/posts'
 
 
 @exception_handler
-def get_data_to_record():
+def get_data_to_record(records_amount):
     """Parse urls given in two global lists USER_URLS_LIST and POST_URLS_LIST with both BeautifulSoup and Selenium.
     Pull all the required information and send data to API.
     """
     # Run a cycle to connect post and author's urls
     @inner_exception_handler
     def find_elements():
+        c = 0
         for i in range(len(POST_URLS_LIST)):
+            if c >= records_amount:
+                break
+            else:
+                c += 1
             data_to_record: Dict[str, str] = {}
             cycle_start_time: float = time.time()
             # Create all necessary connections for parsing
@@ -184,7 +189,7 @@ def main(records_amount) -> NoReturn:
     try:
         get_data(records_amount)
         get_data_urls()
-        get_data_to_record()
+        get_data_to_record(records_amount)
     finally:
         # Close connections
         driver.close()

@@ -6,9 +6,9 @@ import argparse
 # Create a parser
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('-r', '--records_amount', type=int, help='How many records to pull')
-PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'runscrapper', 'file', 'rows', 'logs'],
-                    help='<runserver> - to execute the program; <runscrapper> - to run the scrapper; <file> to know the'
-                         ' file name; <rows> - to know the amount of records; <logs> to show logs')
+PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'runscrapper', 'logs'],
+                    help='<runserver> - to execute the program; <runscrapper> - to run the scrapper; '
+                         '<logs> - to show logs')
 args = PARSER.parse_args()
 # Catch keywords from commandline.
 if args.action == 'runserver':
@@ -17,12 +17,6 @@ if args.action == 'runserver':
 elif args.action == 'runscrapper':
     from scrapper.main import main
     main(args.records_amount)
-elif args.action == 'file':
-    with open('file_info.txt', 'r') as f:
-        print(f.readlines()[0])
-elif args.action == 'rows':
-    with open('file_info.txt', 'r') as f:
-        print(f.readlines()[1])
 elif args.action == 'logs':
     with open('logs.log', 'r') as f:
         print(f.read())
