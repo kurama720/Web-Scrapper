@@ -17,7 +17,7 @@
 **Chrome** version.  
 3. Put driver in _iTechArt/scrapper_ directory.
 4. If Windows user, copy an absolute path to driver and write in selenium_driver.py.
-5. Install requirements
+5. Install requirements.
 
 ## How it works?
 
