@@ -31,15 +31,15 @@ def create_database():
         cursor.close()
         connection.close()
     except OperationalError:
-        LOGGER.error('Provide fields in database/db_connection.py create_database() with username,'
-                     'password and existing database.')
+        LOGGER.error("Provide username, password to PostgreSQL and existing database in database/db_connection.py"
+                     "create_database()")
 
 
 def create_connection():
     """Connect to database and return the connection"""
     try:
         db_name = 'reddit_scrapper'
-        # Type your username, password and existing database
+        # Type your username and password to connect to database reddit_scrapper
         con = psycopg2.connect(
             database=db_name,
             user="",
@@ -50,10 +50,7 @@ def create_connection():
         con.autocommit = True
         return con
     except OperationalError:
-        LOGGER.error('Provide database/db_connection.py create_connection() with username '
-                     'and password to database.')
-    except AttributeError:
-        pass
+        LOGGER.error("Provide username, password to PostgreSQL in database/db_connection.py create_connection()")
 
 
 def create_table():

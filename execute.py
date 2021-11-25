@@ -6,7 +6,7 @@ import argparse
 # Create a parser
 PARSER = argparse.ArgumentParser()
 PARSER.add_argument('-r', '--records_amount', type=int, help='How many records to pull', default=100)
-PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'runscrapper', 'file', 'rows', 'logs'],
+PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'runscrapper', 'logs'],
                     help='<runserver> - to run the server; <runscrapper> - to run the scrapper')
 args = PARSER.parse_args()
 # Catch keywords from commandline.
