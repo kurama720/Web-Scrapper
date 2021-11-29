@@ -5,6 +5,7 @@ import psycopg2.extras
 from psycopg2 import extensions
 
 from scrapper.logger import logger_for_handlers
+from database.constant_data import USERNAME, PASSWORD, EXISTING_DATABASE
 
 LOGGER = logger_for_handlers()
 
@@ -13,11 +14,11 @@ def create_database():
     """Create database"""
     # Connect to server
     # Type your username, password and existing database
-    connection = psycopg2.connect(user="",
-                                  password="",
+    connection = psycopg2.connect(user=USERNAME,
+                                  password=PASSWORD,
                                   host="127.0.0.1",
                                   port="5432",
-                                  database="")
+                                  database=EXISTING_DATABASE)
     connection.set_isolation_level(extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = connection.cursor()
     # Create database
@@ -36,8 +37,8 @@ def create_connection():
     # Type your username and password to connect to database reddit_scrapper
     con = psycopg2.connect(
         database=db_name,
-        user="",
-        password="",
+        user=USERNAME,
+        password=PASSWORD,
         host="127.0.0.1",
         port="5432"
     )
@@ -48,8 +49,6 @@ def create_connection():
 def create_table():
     """Create table"""
     cursor = create_connection().cursor()
-    cursor.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
-    cursor.execute('SELECT uuid_generate_v4();')
     create_table_author = '''CREATE TABLE IF NOT EXISTS author (
                              author_id serial NOT NULL PRIMARY KEY,
                              name VARCHAR NOT NULL UNIQUE,
@@ -59,7 +58,7 @@ def create_table():
                              comment_karma VARCHAR NOT NULL
                           );'''
     create_table_post = '''CREATE TABLE IF NOT EXISTS post (
-                          post_id uuid DEFAULT uuid_generate_v4 () PRIMARY KEY,
+                          post_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
                           post_url VARCHAR NOT NULL,
                           comments_number VARCHAR NOT NULL,
                           votes_number VARCHAR NOT NULL,
@@ -75,9 +74,7 @@ def create_table():
     cursor.execute(create_table_post)
 
 
-def main():
+def create_vault():
     create_database()
     create_table()
-
-
-main()
+    LOGGER.info('Database and table created successfully')
