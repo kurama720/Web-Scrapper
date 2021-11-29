@@ -1,5 +1,4 @@
-"""Creates connection to Mongo and collection named <posts>.
-"""
+"""Creates connection to Mongo and collection named <posts>."""
 
 import pymongo
 
