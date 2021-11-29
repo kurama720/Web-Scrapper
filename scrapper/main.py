@@ -112,33 +112,34 @@ def get_data_to_record(records_amount):
             soup_user = BeautifulSoup(response_user.content, 'lxml')
             # Wait until data is loaded on a page
             try:
+                data_to_record['_id'] = str(uuid4())
                 WebDriverWait(driver, 20) \
                     .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
                 # Create an id
-                data_to_record['POST URL'] = POST_URLS_LIST[i]
+                data_to_record['post_url'] = POST_URLS_LIST[i]
                 # Find author's username
-                data_to_record['AUTHOR']: str = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG').text[2:]
+                data_to_record['author']: str = driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG').text[2:]
                 # Check if author's profile has 18+ limit
                 if soup_user.find('h3', text='You must be 18+ to view this community'):
-                    data_to_record['USER KARMA']: str = '18+ profile'
-                    data_to_record['CAKE DAY']: str = '18+ profile'
+                    data_to_record['user_karma']: str = '18+ profile'
+                    data_to_record['cake_day']: str = '18+ profile'
                 # Check if author's profile has been suspended
                 elif soup_user.find('h3', class_='_2XKLlvmuqdor3RvVbYZfgz'):
-                    data_to_record['USER KARMA']: str = 'Account has been suspended'
-                    data_to_record['CAKE DAY']: str = 'Account has been suspended'
+                    data_to_record['user_karma']: str = 'Account has been suspended'
+                    data_to_record['cake_day']: str = 'Account has been suspended'
                 # Then find cake day and user karma
                 else:
-                    data_to_record['USER KARMA']: str = soup_user.find(
+                    data_to_record['user_karma']: str = soup_user.find(
                         'span', id='profile--id-card--highlight-tooltip--karma').text
-                    data_to_record['CAKE DAY']: str = soup_user.find(
+                    data_to_record['cake_day']: str = soup_user.find(
                         'span', id='profile--id-card--highlight-tooltip--cakeday').text
                 # Find number of comments on a post
-                data_to_record['COMMENTS NUMBER']: str = driver.find_element(By.CLASS_NAME,
+                data_to_record['comments_number']: str = driver.find_element(By.CLASS_NAME,
                                                                              '_1UoeAeSRhOKSNdY_h3iS1O').text
                 # Find number of votes on a post
-                data_to_record['VOTES NUMBER']: str = driver.find_element(By.CLASS_NAME, '_1rZYMD_4xY3gRcSS3p8ODO').text
+                data_to_record['votes_number']: str = driver.find_element(By.CLASS_NAME, '_1rZYMD_4xY3gRcSS3p8ODO').text
                 # Find post category and remove the prefix r/
-                data_to_record['POST CATEGORY']: str = driver.find_element(By.CLASS_NAME, '_19bCWnxeTjqzBElWZfIlJb') \
+                data_to_record['post_category']: str = driver.find_element(By.CLASS_NAME, '_19bCWnxeTjqzBElWZfIlJb') \
                     .get_property('title')[2:]
                 # Use selenium to imitate cursor freezing to load other information and wait until it loads
                 action.move_to_element(driver.find_element(By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')).perform()
@@ -146,8 +147,8 @@ def get_data_to_record(records_amount):
                     .until(ec.presence_of_element_located((By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')))
                 # Find list of post and comment karma
                 post_and_comment_karma: List = driver.find_elements(By.CLASS_NAME, '_18aX_pAQub_mu1suz4-i8j')
-                data_to_record['POST KARMA']: str = post_and_comment_karma[0].text
-                data_to_record['COMMENT KARMA']: str = post_and_comment_karma[1].text
+                data_to_record['post_karma']: str = post_and_comment_karma[0].text
+                data_to_record['comment_karma']: str = post_and_comment_karma[1].text
                 # Find post date
                 amount = []
                 for item in driver.find_element(By.CLASS_NAME, '_3jOxDPIQ0KaOWpzvSQo-1s').text:
@@ -156,7 +157,7 @@ def get_data_to_record(records_amount):
                 current_date = datetime.datetime.now()
                 delta = datetime.timedelta(days=(int(''.join(amount))))
                 current_date = current_date - delta
-                data_to_record['POST DATE'] = f"{current_date.day}-{current_date.month}-{current_date.year}"
+                data_to_record['post_date'] = f"{current_date.day}-{current_date.month}-{current_date.year}"
 
             except TimeoutException:
                 # try to refresh the page
@@ -166,12 +167,12 @@ def get_data_to_record(records_amount):
                         .until(ec.presence_of_element_located((By.CLASS_NAME, '_2mHuuvyV9doV3zwbZPtIPG')))
                 # if exception raises anyway, provide fields with "data wasn't loaded"
                 except TimeoutException:
-                    data_to_record['UNIQUE ID'] = str(uuid4())
-                    data_to_record['POST URL'] = POST_URLS_LIST[i]
-                    data_to_record = {k: "data wasn't loaded" for k in ['AUTHOR', 'USER KARMA', 'CAKE DAY',
-                                                                        'COMMENTS NUMBER', 'VOTES NUMBER',
-                                                                        'POST CATEGORY', 'POST KARMA', 'COMMENT KARMA',
-                                                                        'POST DATE']}
+                    data_to_record['_id'] = str(uuid4())
+                    data_to_record['post_url'] = POST_URLS_LIST[i]
+                    data_to_record = {k: "data wasn't loaded" for k in ['author', 'user_karma', 'cake_day',
+                                                                        'comments_number', 'votes_number',
+                                                                        'post_category', 'post_karma', 'comment_karma',
+                                                                        'post_date']}
             finally:
                 requests.post(url=api_URL, data=json.dumps(data_to_record))
 

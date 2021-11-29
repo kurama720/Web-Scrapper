@@ -24,8 +24,7 @@
 ---
 It parses **reddit.com** with _BeautifulSoup_ and _Selenium_. Searches for given amount of posts in category _Top ->
 This Month_. Pulls such info as: _post URL_, _author's username_, _author's karma_, _cake day_, _post karma_,
-_comment karma_, _post date_, _number of comments_, _number of votes_ and _post category_. Also assigns a _unique id_
-for each record with _uuid_.  
+_comment karma_, _post date_, _number of comments_, _number of votes_ and _post category_.
 Divides data on author data and post data. Saves it in MongoDB, _author_ and _posts_.  
 Scrapping takes ~15 minutes.  
 Creates API processing request methods as GET, POST, PUT, DELETE. Takes data from database.
