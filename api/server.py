@@ -6,10 +6,10 @@ from typing import List
 
 from pymongo.errors import DuplicateKeyError
 
-from scrapper.logger import create_logger
+from scrapper.logger import create_server_logger
 from database.db_requests import insert_record, find_record, update_record, delete_record
 
-LOGGER = create_logger()
+LOGGER = create_server_logger()
 
 
 class Server(BaseHTTPRequestHandler):
@@ -18,26 +18,36 @@ class Server(BaseHTTPRequestHandler):
     # Process GET request method
     def do_GET(self):
         if self.path == '/posts/':
-            # Find all documents in db with find_document()
-            total_posts: List[dict] = find_record()
-            if len(total_posts) == 0:
+            try:
+                # Find all documents in db with find_document()
+                total_posts: List[dict] = find_record()
+                if len(total_posts) == 0:
+                    self.send_response(404)
+                else:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/json')
+                    self.end_headers()
+                    for data in total_posts:
+                        self.wfile.write(json.dumps(data).encode())
+            except Exception as ex:
                 self.send_response(404)
-            else:
-                self.send_response(200)
-                self.send_header('Content-type', 'text/json')
-                self.end_headers()
-                for data in total_posts:
-                    self.wfile.write(json.dumps(data).encode())
+                LOGGER.error(f"{ex}")
         else:
             try:
                 # Find a document with given id
-                one_post = find_record(self.path.split('/posts/')[-1])
-                self.send_response(200)
-                self.send_header('Content-type', 'text/json')
-                self.end_headers()
-                self.wfile.write(json.dumps(one_post).encode())
+                one_record = find_record(self.path.split('/posts/')[-1])
+                if one_record is None:
+                    self.send_response(404)
+                else:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(one_record).encode())
             except TypeError:
                 self.send_response(404)
+            except Exception as ex:
+                self.send_response(404)
+                LOGGER.error(f"{ex}")
 
     # Process POST request method
     def do_POST(self):
@@ -46,40 +56,55 @@ class Server(BaseHTTPRequestHandler):
         try:
             # Process POST method with db request
             insert_record(content)
-            # Get post_id of inserted record
-            posted_record: dict = find_record(content['post_id'])
             # Create dict with post_id and row
-            output: dict = {posted_record['_id']: len(find_record())}
+            output: dict = {content['post_id']: len(find_record())}
             self.send_response(201)
             self.send_header('Content-type', 'text/json')
             self.end_headers()
             self.wfile.write(json.dumps(output).encode())
         except DuplicateKeyError:
             self.send_response(404)
+        except TypeError:
+            self.send_response(404)
+        except Exception as ex:
+            self.send_response(404)
+            LOGGER.error(f"{ex}")
 
     # Process PUT request method
     def do_PUT(self):
-        try:
-            content_len = int(self.headers.get('Content-Length'))
-            content: dict = json.loads(self.rfile.read(content_len).decode())
-            # Update document
-            update_record(self.path.split('/posts/')[-1], content)
-            self.send_response(201)
-            self.send_header('Content-type', 'text/json')
-            self.end_headers()
-        except TypeError:
+        if not find_record(self.path.split('/posts/')[-1]):
             self.send_response(404)
+        else:
+            try:
+                content_len = int(self.headers.get('Content-Length'))
+                content: dict = json.loads(self.rfile.read(content_len).decode())
+                # Update document
+                update_record(self.path.split('/posts/')[-1], content)
+                self.send_response(201)
+                self.send_header('Content-type', 'text/json')
+                self.end_headers()
+            except TypeError:
+                self.send_response(404)
+            except Exception as ex:
+                self.send_response(404)
+                LOGGER.error(f"{ex}")
 
     # Process DELETE request method
     def do_DELETE(self):
-        # Delete document
-        try:
-            delete_record(self.path.split('/posts/')[-1])
-            self.send_response(201)
-            self.send_header('Content-type', 'text/json')
-            self.end_headers()
-        except TypeError:
+        if not find_record(self.path.split('/posts/')[-1]):
             self.send_response(404)
+        # Delete document
+        else:
+            try:
+                delete_record(self.path.split('/posts/')[-1])
+                self.send_response(201)
+                self.send_header('Content-type', 'text/json')
+                self.end_headers()
+            except TypeError:
+                self.send_response(404)
+            except Exception as ex:
+                self.send_response(404)
+                LOGGER.error(f"{ex}")
 
 
 def run_server():

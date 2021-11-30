@@ -5,9 +5,9 @@ from urllib3.exceptions import MaxRetryError
 
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 
-from scrapper.logger import logger_for_handlers
+from scrapper.logger import create_handler_logger
 
-LOGGER_HANDLER = logger_for_handlers()
+LOGGER_HANDLER = create_handler_logger()
 
 
 # Exception handler for get_data_to_record() func

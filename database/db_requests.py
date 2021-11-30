@@ -2,11 +2,15 @@
 
 from typing import List
 
+from pymongo.errors import DuplicateKeyError
+
 from database.db_connection import author_collection, posts_collection
-from scrapper.main import LOGGER
+from scrapper.logger import create_db_logger
+
+LOGGER = create_db_logger()
 
 AUTHOR_FIELDS = ['user_karma', 'cake_day', 'post_karma', 'comment_karma']
-POST_FIELDS = ['_id', 'post_url', 'comments_number', 'votes_number', 'post_category', 'post_date']
+POST_FIELDS = ['post_url', 'comments_number', 'votes_number', 'post_category', 'post_date']
 
 
 def find_record(element_id: str = None):
@@ -48,11 +52,15 @@ def insert_record(data: dict):
     try:
         author_data = {k: v for k, v in data.items() if k in AUTHOR_FIELDS}
         post_data = {k: v for k, v in data.items() if k in POST_FIELDS}
+        post_data['_id'] = data['post_id']
         author_data['_id'] = data['author']
         post_data['author_name'] = author_data['_id']
         if not author_collection.find_one({'_id': data['author']}):
             author_collection.insert_one(author_data)
         posts_collection.insert_one(post_data)
+
+    except DuplicateKeyError:
+        raise DuplicateKeyError
     except Exception as ex:
         LOGGER.error(f"{ex}")
 
@@ -69,6 +77,7 @@ def update_record(element_id: str, new_data: dict):
         post_author: str = posts_collection.find_one({'_id': element_id})['author_name']
         author_collection.update_one({'_id': post_author}, {'$set': author_new_data})
         posts_collection.update_one({'_id': element_id}, {'$set': post_new_data})
+
     except Exception as ex:
         LOGGER.error(f"{ex}")
 
@@ -84,5 +93,6 @@ def delete_record(element_id: str):
         author_has_posts = [i for i in posts_collection.find({'author_name': author_name})]
         if not author_has_posts:
             author_collection.delete_one({'_id': author_name})
+
     except Exception as ex:
         LOGGER.error(f"{ex}")
