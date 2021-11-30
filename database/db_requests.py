@@ -9,7 +9,7 @@ AUTHOR_FIELDS = ['user_karma', 'cake_day', 'post_karma', 'comment_karma']
 POST_FIELDS = ['_id', 'post_url', 'comments_number', 'votes_number', 'post_category', 'post_date']
 
 
-def find_document(element_id: dict):
+def find_record(element_id: dict):
     """Search for document containing given elements in given collection. Take boolean argument all_doc, search for all
     documents in collection if True.
 
@@ -38,7 +38,7 @@ def find_document(element_id: dict):
         LOGGER.error(f"{ex}")
 
 
-def insert_document(data: dict):
+def insert_record(data: dict):
     """Insert a document to db. Divide data on author data and post data, then save it into collections.
      Take data to be inserted
 
@@ -56,7 +56,7 @@ def insert_document(data: dict):
         LOGGER.error(f"{ex}")
 
 
-def update_document(element_id: dict, new_data: dict):
+def update_record(element_id: dict, new_data: dict):
     """Update document having given id with new_values
 
     :param dict element_id: post _id to be updated
@@ -72,13 +72,13 @@ def update_document(element_id: dict, new_data: dict):
         LOGGER.error(f"{ex}")
 
 
-def delete_document(element_id: dict):
+def delete_record(element_id: dict):
     """Delete document with given id. Check whether author has more posts, if not delete him.
 
     :param dict element_id: post _id to be deleted
     """
     try:
-        author_name = find_document(element_id)['author_name']
+        author_name = find_record(element_id)['author_name']
         posts_collection.delete_one(element_id)
         author_has_posts = [i for i in posts_collection.find({'author_name': author_name})]
         if not author_has_posts:
