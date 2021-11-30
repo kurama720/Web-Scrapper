@@ -1,5 +1,5 @@
 """Collect data for db connection"""
 
-USERNAME = ''
-PASSWORD = ''
-EXISTING_DATABASE = ''
+USERNAME = 'root'
+PASSWORD = '12345'
+EXISTING_DATABASE = 'postgres'

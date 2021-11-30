@@ -12,8 +12,8 @@ PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'runs
 args = PARSER.parse_args()
 # Catch keywords from commandline.
 if args.action == 'runserver':
-    from api.server import main
-    main()
+    from api.server import run_server
+    run_server()
 elif args.action == 'runscrapper':
     from scrapper.main import main
     main(args.records_amount)

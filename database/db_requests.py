@@ -1,5 +1,8 @@
 """Module implements processing requests to database."""
-from psycopg2 import errors as db_error
+
+from typing import NoReturn
+
+from psycopg2 import errors
 
 from database.db_connection import create_connection
 from scrapper.logger import logger_for_handlers
@@ -7,7 +10,6 @@ from scrapper.logger import logger_for_handlers
 LOGGER = logger_for_handlers()
 
 CONNECTION = create_connection()
-CURSOR = CONNECTION.cursor()
 
 AUTHOR_FIELDS = ["author", "user_karma", "cake_day", "post_karma", "comment_karma"]
 
@@ -16,123 +18,116 @@ POST_FIELDS = ['post_id', 'post_url', 'comments_number', 'votes_number', 'post_c
 TOTAL_FIELDS = ['post_id', 'post_url', 'comments_number', 'votes_number', 'post_category', 'post_date', 'author',
                 'user_karma', 'cake_day', 'post_karma', 'comment_karma']
 
+UniqueViolationError = errors.lookup('23505')
 
-def insert_record(data: dict):
-    """Insert records in database"""
-    try:
-        save_author_data = '''INSERT INTO author (name, user_karma, cake_day, post_karma, comment_karma) VALUES
-                              (%s, %s, %s, %s, %s)
-                           '''
-        save_post_data = '''INSERT INTO post (post_id, post_url, comments_number, votes_number, post_category, post_date,
-                         author_name) VALUES (%s, %s, %s, %s, %s, %s, %s) 
-                         '''
-        author_exists = '''SELECT * from author WHERE name = %s'''
-        post_data = [v for k, v in data.items() if k in POST_FIELDS]
-        post_data.append(data['author'])
-        CURSOR.execute(author_exists, (data['author'],))
-        if not CURSOR.fetchall():
-            CURSOR.execute(save_author_data, ([v for k, v in data.items() if k in AUTHOR_FIELDS]))
-        CURSOR.execute(save_post_data, ([i for i in post_data]))
-    except db_error:
-        LOGGER.error(f"{db_error}")
+
+def insert_record(data: dict) -> NoReturn:
+    """Insert records in database
+
+    :param dict data: data to be inserted
+    """
+    with CONNECTION.cursor() as cursor:
+        try:
+            save_author_data = '''INSERT INTO author (name, user_karma, cake_day, post_karma, comment_karma) VALUES
+                                  (%s, %s, %s, %s, %s)
+                               '''
+            save_post_data = '''INSERT INTO post (post_id, post_url, comments_number, votes_number, post_category,
+                             post_date, author_name) VALUES (%s, %s, %s, %s, %s, %s, %s) 
+                             '''
+            author_exists = '''SELECT * from author WHERE name = %s'''
+            post_data = [v for k, v in data.items() if k in POST_FIELDS]
+            post_data.append(data['author'])
+            cursor.execute(author_exists, (data['author'],))
+            if not cursor.fetchall():
+                cursor.execute(save_author_data, ([v for k, v in data.items() if k in AUTHOR_FIELDS]))
+            cursor.execute(save_post_data, ([i for i in post_data]))
+
+        except UniqueViolationError:
+            raise UniqueViolationError
+        except Exception as ex:
+            LOGGER.error(f"{ex}")
 
 
 def find_record(element_id: str = ''):
     """Find records in database, If all_records True then find all of records. Provide taken data with fields and
-    return dict"""
-    try:
-        if not element_id:
-            find_all = '''SELECT post_id, post_url, comments_number, votes_number, post_category, post_date, name,
-                       user_karma, cake_day, post_karma, comment_karma FROM post INNER JOIN author 
-                       ON post.author_name = author.name
-                       '''
-            CURSOR.execute(find_all)
-            data = CURSOR.fetchall()
-            output = []
-            for data in data:
-                named_records = {}
-                for i in range(len(TOTAL_FIELDS)):
-                    named_records[TOTAL_FIELDS[i]] = data[i]
-                output.append(named_records)
-            return output
-        else:
-            find_by_id = '''SELECT post_id, post_url, comments_number, votes_number, post_category, post_date, name,
-                       user_karma, cake_day, post_karma, comment_karma FROM post INNER JOIN author 
-                       ON post.author_name = author.name WHERE post_id = %s'''
-            CURSOR.execute(find_by_id, (element_id,))
-            data = CURSOR.fetchall()
-            for data in data:
-                named_records = {}
-                for i in range(len(TOTAL_FIELDS)):
-                    named_records[TOTAL_FIELDS[i]] = data[i]
-                return named_records
-    except db_error:
-        LOGGER.error(f"{db_error}")
+    return dict
+
+    :param str element_id: post_id to be found
+    :return: list with dictionaries of records
+    """
+    with CONNECTION.cursor() as cursor:
+        try:
+            if not element_id:
+                find_all = '''SELECT post_id, post_url, comments_number, votes_number, post_category, post_date, name,
+                           user_karma, cake_day, post_karma, comment_karma FROM post INNER JOIN author 
+                           ON post.author_name = author.name
+                           '''
+                cursor.execute(find_all)
+                data = cursor.fetchall()
+                output = []
+                for data in data:
+                    named_records = {}
+                    for i in range(len(TOTAL_FIELDS)):
+                        named_records[TOTAL_FIELDS[i]] = data[i]
+                    output.append(named_records)
+                return output
+            else:
+                find_by_id = '''SELECT post_id, post_url, comments_number, votes_number, post_category, post_date, name,
+                           user_karma, cake_day, post_karma, comment_karma FROM post INNER JOIN author 
+                           ON post.author_name = author.name WHERE post_id = %s'''
+                cursor.execute(find_by_id, (element_id,))
+                data = cursor.fetchall()
+                for data in data:
+                    named_records = {}
+                    for i in range(len(TOTAL_FIELDS)):
+                        named_records[TOTAL_FIELDS[i]] = data[i]
+                    return named_records
+
+        except Exception as ex:
+            LOGGER.error(f"{ex}")
 
 
-def update_record(element_id: str, data: dict):
-    """Update record with given id and given data. SQL is picky, so every key is to be processed in separate block"""
-    try:
-        for k, v in data.items():
-            k = k.lower()
-            if 'post_url' in k:
-                update_by_id = '''UPDATE post SET post_url = %s WHERE post_id = %s'''
-                CURSOR.execute(update_by_id, (v, element_id,))
-            elif 'author' in k:
-                update_by_id = '''SELECT * FROM author INNER JOIN post ON author.name = post.author_name
-                               WHERE post.post_id = %s;
-                               UPDATE author SET name = %s;'''
-                CURSOR.execute(update_by_id, (element_id, v))
-            elif 'user_karma' in k:
-                update_by_id = '''SELECT * FROM author INNER JOIN post ON author.name = post.author_name
-                               WHERE post.post_id = %s;
-                               UPDATE author SET user_karma = %s;'''
-                CURSOR.execute(update_by_id, (element_id, v))
-            elif 'cake_day' in k:
-                update_by_id = '''SELECT * FROM author INNER JOIN post ON author.name = post.author_name
-                               WHERE post.post_id = %s;
-                               UPDATE author SET cake_day = %s;'''
-                CURSOR.execute(update_by_id, (element_id, v))
-            elif 'comments_number' in k:
-                update_by_id = '''UPDATE post SET comments_number = %s WHERE post_id = %s'''
-                CURSOR.execute(update_by_id, (v, element_id,))
-            elif 'votes_number' in k:
-                update_by_id = '''UPDATE post SET votes_number = %s WHERE post_id = %s'''
-                CURSOR.execute(update_by_id, (v, element_id,))
-            elif 'post_category' in k:
-                update_by_id = '''UPDATE post SET post_category = %s WHERE post_id = %s'''
-                CURSOR.execute(update_by_id, (v, element_id,))
-            elif 'post_karma' in k:
-                update_by_id = '''SELECT * FROM author INNER JOIN post ON author.name = post.author_name
-                               WHERE post.post_id = %s;
-                               UPDATE author SET post_karma = %s;'''
-                CURSOR.execute(update_by_id, (element_id, v))
-            elif 'comment_karma' in k:
-                update_by_id = '''SELECT * FROM author INNER JOIN post ON author.name = post.author_name
-                               WHERE post.post_id = %s;
-                               UPDATE author SET comment_karma = %s;'''
-                CURSOR.execute(update_by_id, (element_id, v))
-            elif 'post_date' in k:
-                update_by_id = '''UPDATE post SET post_date = %s WHERE post_id = %s'''
-                CURSOR.execute(update_by_id, (v, element_id,))
-    except db_error:
-        LOGGER.error(f"{db_error}")
+def update_record(element_id: str, data: dict) -> NoReturn:
+    """Update record with given id and given data. Search for post with element_id and update with given data.
+
+    :param str element_id: post_id
+    :param dict data: new data for post
+    """
+    with CONNECTION.cursor() as cursor:
+        try:
+            for k, v in data.items():
+                if k in POST_FIELDS:
+                    update_post = """UPDATE post SET {0} = %s WHERE post_id = %s""".format(k)
+                    cursor.execute(update_post, (v, element_id))
+                if k in AUTHOR_FIELDS:
+                    update_author = """SELECT * FROM author INNER JOIN post ON author.name = post.author_name
+                                   WHERE post.post_id = %s;
+                                   UPDATE author SET {0} = %s;""".format(k)
+                    cursor.execute(update_author, (element_id, v))
+
+        except Exception as ex:
+            LOGGER.error(f"{ex}")
 
 
-def delete_record(element_id: str):
-    """Delete record with given id"""
-    try:
-        # Find author name
-        CURSOR.execute('''SELECT author_name FROM post WHERE post_id = %s''', (element_id,))
-        author_name = CURSOR.fetchone()
-        # Delete post with given id
-        delete_by_id = '''DELETE FROM post WHERE post_id = %s'''
-        CURSOR.execute(delete_by_id, (element_id,))
-        # Find all posts by the author found previously
-        CURSOR.execute('''SELECT post_id FROM post WHERE author_name = %s''', author_name)
-        author_has_posts = CURSOR.fetchall()
-        # Check whether he has posts and delete if False
-        if not author_has_posts:
-            CURSOR.execute('''DELETE FROM author WHERE name = %s''', author_name)
-    except db_error:
-        LOGGER.error(f"{db_error}")
+def delete_record(element_id: str) -> NoReturn:
+    """Delete record with given id.
+
+    :param str element_id: post_id to be deleted
+    """
+    with CONNECTION.cursor() as cursor:
+        try:
+            # Find author name
+            cursor.execute('''SELECT author_name FROM post WHERE post_id = %s''', (element_id,))
+            author_name = cursor.fetchone()
+            # Delete post with given id
+            delete_by_id = '''DELETE FROM post WHERE post_id = %s'''
+            cursor.execute(delete_by_id, (element_id,))
+            # Find all posts by the author found previously
+            cursor.execute('''SELECT post_id FROM post WHERE author_name = %s''', author_name)
+            author_has_posts = cursor.fetchall()
+            # Check whether he has posts and delete if False
+            if not author_has_posts:
+                cursor.execute('''DELETE FROM author WHERE name = %s''', author_name)
+
+        except Exception as ex:
+            LOGGER.error(f"{ex}")

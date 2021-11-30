@@ -32,9 +32,10 @@ Divides posted data on author data and post data, then saves it into two tables 
 
 ## How to run?
 ---
-Type your _username_, _password_ to PostgreSQL and existing _database_ in directory _database/db_connection.py_
-in _create_database()_ function to connect to database server. Type _username_ and _password_ again into
-_create_connection()_ function.
+Type your _username_, _password_ to PostgreSQL and existing _database_ in directory _database/constant_data.py_.
+
+To create database and tables run this in the foled iTechArt/:  
+```% python execute.py -a createvault```
 
 To run server execute this in the folder iTechArt/:  
 ```$ python execute.py -a runserver```
