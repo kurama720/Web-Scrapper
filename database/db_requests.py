@@ -9,15 +9,15 @@ AUTHOR_FIELDS = ['user_karma', 'cake_day', 'post_karma', 'comment_karma']
 POST_FIELDS = ['_id', 'post_url', 'comments_number', 'votes_number', 'post_category', 'post_date']
 
 
-def find_record(element_id: dict):
+def find_record(element_id: str = None):
     """Search for document containing given elements in given collection. Take boolean argument all_doc, search for all
     documents in collection if True.
 
-    :param dict element_id: _id of post to be searched
+    :param str element_id: post _id to be searched
     :return: list of documents
     """
     try:
-        if not element_id:
+        if element_id is None:
             author_id: List[dict] = []
             merged_docs: List[dict] = []
             for author in author_collection.find({}):
@@ -30,10 +30,11 @@ def find_record(element_id: dict):
                     merged_docs.append(merged)
             return merged_docs
         else:
-            post_doc: dict = posts_collection.find_one(element_id)
+            post_doc: dict = posts_collection.find_one({'_id': element_id})
             author_doc: dict = author_collection.find_one({'_id': post_doc['author_name']})
             del author_doc['_id']
             return {**post_doc, **author_doc}
+
     except Exception as ex:
         LOGGER.error(f"{ex}")
 
@@ -56,7 +57,7 @@ def insert_record(data: dict):
         LOGGER.error(f"{ex}")
 
 
-def update_record(element_id: dict, new_data: dict):
+def update_record(element_id: str, new_data: dict):
     """Update document having given id with new_values
 
     :param dict element_id: post _id to be updated
@@ -65,21 +66,21 @@ def update_record(element_id: dict, new_data: dict):
     try:
         author_new_data = {k: v for k, v in new_data.items() if k in AUTHOR_FIELDS}
         post_new_data = {k: v for k, v in new_data.items() if k in POST_FIELDS}
-        post_author: str = posts_collection.find_one(element_id)['author_name']
+        post_author: str = posts_collection.find_one({'_id': element_id})['author_name']
         author_collection.update_one({'_id': post_author}, {'$set': author_new_data})
-        posts_collection.update_one(element_id, {'$set': post_new_data})
+        posts_collection.update_one({'_id': element_id}, {'$set': post_new_data})
     except Exception as ex:
         LOGGER.error(f"{ex}")
 
 
-def delete_record(element_id: dict):
+def delete_record(element_id: str):
     """Delete document with given id. Check whether author has more posts, if not delete him.
 
     :param dict element_id: post _id to be deleted
     """
     try:
         author_name = find_record(element_id)['author_name']
-        posts_collection.delete_one(element_id)
+        posts_collection.delete_one({'_id': element_id})
         author_has_posts = [i for i in posts_collection.find({'author_name': author_name})]
         if not author_has_posts:
             author_collection.delete_one({'_id': author_name})
