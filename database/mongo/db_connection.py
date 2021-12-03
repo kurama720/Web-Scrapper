@@ -2,7 +2,10 @@
 
 import pymongo
 
-client = pymongo.MongoClient('localhost', 27017)
+DB_HOST = 'localhost'
+DB_PORT = 27017
+
+client = pymongo.MongoClient(DB_HOST, DB_PORT)
 db = client['PostsDB']
 
 posts_collection = db['post']

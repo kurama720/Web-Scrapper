@@ -7,12 +7,18 @@ from psycopg2 import errors
 from pymongo.errors import DuplicateKeyError
 
 from scrapper.logger import create_server_logger
-from database.db_mongo.db_requests import insert_record, find_record, update_record, delete_record
+from api.select_db import METHODS_LIST
 
+
+# Unpack imported list with database methods
+insert_record, find_record, update_record, delete_record = METHODS_LIST
 
 # Import a duplicate primary key exception
 UniqueViolationError = errors.lookup('23505')
 LOGGER = create_server_logger()
+
+SERVER_HOST = ''
+SERVER_PORT = 8087
 
 
 class Server(BaseHTTPRequestHandler):
@@ -111,9 +117,6 @@ class Server(BaseHTTPRequestHandler):
 
 
 def run_server():
-    server = HTTPServer(('', 8087), Server)
-    LOGGER.info('Server running on port: 8087')
+    server = HTTPServer((SERVER_HOST, SERVER_PORT), Server)
+    LOGGER.info('Server running on port: {0}'.format(SERVER_PORT))
     server.serve_forever()
-
-
-run_server()

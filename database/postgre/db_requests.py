@@ -1,10 +1,10 @@
 """Module implements processing requests to database."""
 
-from typing import NoReturn
+from typing import NoReturn, Any
 
 from psycopg2 import errors
 
-from database.db_postgre.db_connection import create_connection
+from database.postgre.db_connection import create_connection
 from scrapper.logger import create_db_logger
 
 LOGGER = create_db_logger()
@@ -48,12 +48,12 @@ def insert_record(data: dict) -> NoReturn:
             raise ex
 
 
-def find_record(element_id: str = ''):
+def find_record(element_id: str = '') -> Any[list, dict]:
     """Find records in database, If all_records True then find all of records. Provide taken data with fields and
     return dict
 
     :param str element_id: record with _id to be found
-    :return: list with dictionaries of records
+    :return: list with dictionaries of records or a dict with one record
     """
     with CONNECTION.cursor() as cursor:
         try:

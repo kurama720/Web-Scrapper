@@ -1,10 +1,10 @@
 """Module for requests to db. Inserts, finds, updates and deletes given documents."""
 
-from typing import List
+from typing import List, Any, NoReturn
 
 from pymongo.errors import DuplicateKeyError
 
-from database.db_mongo.db_connection import author_collection, posts_collection
+from database.mongo.db_connection import author_collection, posts_collection
 from scrapper.logger import create_db_logger
 
 LOGGER = create_db_logger()
@@ -13,12 +13,12 @@ AUTHOR_FIELDS = ['user_karma', 'cake_day', 'post_karma', 'comment_karma']
 POST_FIELDS = ['_id', 'post_url', 'comments_number', 'votes_number', 'post_category', 'post_date']
 
 
-def find_record(element_id: str = None):
+def find_record(element_id: str = None) -> Any[dict, list]:
     """Search for document containing given elements in given collection. Take boolean argument all_doc, search for all
     documents in collection if True.
 
     :param str element_id: post _id to be searched
-    :return: list of documents
+    :return: list of documents or one document in dict
     """
     try:
         if element_id is None:
@@ -45,7 +45,7 @@ def find_record(element_id: str = None):
         raise ex
 
 
-def insert_record(data: dict):
+def insert_record(data: dict) -> NoReturn:
     """Insert a document to db. Divide data on author data and post data, then save it into collections.
      Take data to be inserted
 
@@ -67,7 +67,7 @@ def insert_record(data: dict):
         raise ex
 
 
-def update_record(element_id: str, new_data: dict):
+def update_record(element_id: str, new_data: dict) -> NoReturn:
     """Update document having given id with new_values
 
     :param dict element_id: post _id to be updated
@@ -86,7 +86,7 @@ def update_record(element_id: str, new_data: dict):
         raise ex
 
 
-def delete_record(element_id: str):
+def delete_record(element_id: str) -> NoReturn:
     """Delete document with given id. Check whether author has more posts, if not delete him.
 
     :param dict element_id: post _id to be deleted

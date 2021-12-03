@@ -189,7 +189,7 @@ def get_data_to_record(records_amount: int):
     find_elements()
 
 
-def main(records_amount) -> NoReturn:
+def run_scrapper(records_amount) -> NoReturn:
     """Execute all functions needed for parsing.
 
     :param int records_amount: amount of records to be pulled
