@@ -1,23 +1,25 @@
 """Creates database, connection to it and the table"""
 
+from typing import NoReturn
+
 import psycopg2
 import psycopg2.extras
 from psycopg2 import extensions
 
 from scrapper.logger import create_db_logger
-from database.db_postgre.constant_data import USERNAME, PASSWORD, EXISTING_DATABASE
+from database.postgre.constant_data import USERNAME, PASSWORD, EXISTING_DATABASE, HOST, PORT
 
 LOGGER = create_db_logger()
 
 
-def create_database():
+def create_database() -> NoReturn:
     """Create database"""
     # Connect to server
-    # Type your username, password and existing database
+    # Type your username, password and existing database in constants.py
     connection = psycopg2.connect(user=USERNAME,
                                   password=PASSWORD,
-                                  host="127.0.0.1",
-                                  port="5432",
+                                  host=HOST,
+                                  port=PORT,
                                   database=EXISTING_DATABASE)
     connection.set_isolation_level(extensions.ISOLATION_LEVEL_AUTOCOMMIT)
     with connection.cursor() as cursor:
@@ -34,19 +36,19 @@ def create_database():
 def create_connection():
     """Connect to database and return the connection"""
     db_name = 'redditdb'
-    # Type your username and password to connect to database reddit_scrapper
+    # Type your username, password and existing database in constants.py
     con = psycopg2.connect(
         database=db_name,
         user=USERNAME,
         password=PASSWORD,
-        host="127.0.0.1",
-        port="5432"
+        host=HOST,
+        port=PORT
     )
     con.autocommit = True
     return con
 
 
-def create_table():
+def create_table() -> NoReturn:
     """Create table"""
     with create_connection().cursor() as cursor:
         create_table_author = '''CREATE TABLE IF NOT EXISTS author (

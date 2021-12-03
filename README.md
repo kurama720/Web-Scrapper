@@ -34,7 +34,7 @@ Field *_id* is to be given with post request.
 
 ## How to run?
 ---
-To run server execute this in the folder iTechArt/:
+To run server and select database execute this in the folder iTechArt/:  
 ```$ python execute.py -a runserver```  
 
 To run scrapper execute this, where -r takes an amount of records to be pulled:  
