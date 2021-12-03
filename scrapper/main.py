@@ -1,9 +1,11 @@
 """Main module of scrapper. Scrolls Top -> Month, saves it in to html code file. Collect author's and post's urls from
+<<<<<<< HEAD
 file. Parses them with BS4 and Selenium, then sends it to API.
 """
 
 import json
 from uuid import uuid4
+
 import time
 import datetime
 from typing import List, NoReturn, Dict
@@ -26,11 +28,12 @@ URL: str = 'https://www.reddit.com/top/?t=month'
 LOGGER = create_logger()
 
 
-def get_data(records_amount) -> NoReturn:
+def get_data(records_amount: int) -> NoReturn:
     """Parse reddit.com with Selenium. Take amount of records to be pulled
 
     Scroll until find given amount posts, then save given html code into a file reddit_source.html
 
+    :param int records_amount: amount records to be pulled
     """
     scroll_time_start: float = time.time()
     LOGGER.info('Program started. To break use ctrl+C')
@@ -62,7 +65,6 @@ def get_data_urls() -> NoReturn:
     """Parse reddit_source.html with BeautifulSoup.
 
     Look for post and author's urls. Save them into the global lists USER_URLS_LIST and POST_URLS_LIST.
-
     """
     urls_start_time: float = time.time()
     with open('reddit_source.html', 'r', encoding='utf8') as f:
@@ -90,10 +92,13 @@ api_URL = 'http://127.0.0.1:8087/posts'
 
 
 @exception_handler
-def get_data_to_record(records_amount):
+def get_data_to_record(records_amount: int):
     """Parse urls given in two global lists USER_URLS_LIST and POST_URLS_LIST with both BeautifulSoup and Selenium.
     Pull all the required information and send data to API.
+
+    :param int records_amount: amount of records to be pulled
     """
+
     # Run a cycle to connect post and author's urls
     @inner_exception_handler
     def find_elements():
@@ -161,7 +166,6 @@ def get_data_to_record(records_amount):
                 data_to_record['post_date'] = f"{current_date.day}-{current_date.month}-{current_date.year}"
 
             except TimeoutException:
-                # try to refresh the page
                 try:
                     driver.refresh()
                     WebDriverWait(driver, 20) \
@@ -170,10 +174,9 @@ def get_data_to_record(records_amount):
                 except TimeoutException:
                     data_to_record['_id'] = str(uuid4())
                     data_to_record['post_url'] = POST_URLS_LIST[i]
-                    data_to_record = {k: "data wasn't loaded" for k in ['author', 'user_karma', 'cake_day',
-                                                                        'comments_number', 'votes_number',
-                                                                        'post_category', 'post_karma', 'comment_karma',
-                                                                        'post_date']}
+                    data_to_record = {k: "null" for k in ['author', 'user_karma', 'cake_day', 'comments_number',
+                                                          'votes_number', 'post_category', 'post_karma',
+                                                          'comment_karma', 'post_date']}
             finally:
                 requests.post(url=api_URL, data=json.dumps(data_to_record))
 
@@ -187,7 +190,10 @@ def get_data_to_record(records_amount):
 
 
 def main(records_amount) -> NoReturn:
-    """Execute all functions needed for parsing."""
+    """Execute all functions needed for parsing.
+
+    :param int records_amount: amount of records to be pulled
+    """
     try:
         get_data(records_amount)
         get_data_urls()

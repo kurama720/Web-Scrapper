@@ -1,14 +1,17 @@
 """Module is used for running server and processing request methods: GET, POST, PUT, DELETE"""
-
+from typing import List
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
-from typing import List
 
+from psycopg2 import errors
 from pymongo.errors import DuplicateKeyError
 
 from scrapper.logger import create_server_logger
-from database.db_requests import insert_record, find_record, update_record, delete_record
+from database.db_mongo.db_requests import insert_record, find_record, update_record, delete_record
 
+
+# Import a duplicate primary key exception
+UniqueViolationError = errors.lookup('23505')
 LOGGER = create_server_logger()
 
 
@@ -53,62 +56,61 @@ class Server(BaseHTTPRequestHandler):
     def do_POST(self):
         content_len = int(self.headers.get('Content-Length'))
         content: dict = json.loads(self.rfile.read(content_len).decode())
+        if '_id' not in content.keys():
+            self.send_response(404)
         try:
             # Process POST method with db request
             insert_record(content)
             # Create dict with post_id and row
-            output: dict = {content['post_id']: len(find_record())}
+            output: dict = {content['_id']: len(find_record())}
             self.send_response(201)
             self.send_header('Content-type', 'text/json')
             self.end_headers()
             self.wfile.write(json.dumps(output).encode())
-        except DuplicateKeyError:
+        except (DuplicateKeyError, TypeError, UniqueViolationError):
             self.send_response(404)
-        except TypeError:
+        except (KeyError, IndexError):
             self.send_response(404)
+            LOGGER.error("Wrong field or a required field is missing")
         except Exception as ex:
             self.send_response(404)
             LOGGER.error(f"{ex}")
 
     # Process PUT request method
     def do_PUT(self):
-        if not find_record(self.path.split('/posts/')[-1]):
+        try:
+            content_len = int(self.headers.get('Content-Length'))
+            content: dict = json.loads(self.rfile.read(content_len).decode())
+            # Update document
+            # Process PUT method with db request
+            update_record(self.path.split('/posts/')[-1], content)
+            self.send_response(201)
+            self.send_header('Content-type', 'text/json')
+            self.end_headers()
+        except TypeError:
             self.send_response(404)
-        else:
-            try:
-                content_len = int(self.headers.get('Content-Length'))
-                content: dict = json.loads(self.rfile.read(content_len).decode())
-                # Update document
-                update_record(self.path.split('/posts/')[-1], content)
-                self.send_response(201)
-                self.send_header('Content-type', 'text/json')
-                self.end_headers()
-            except TypeError:
-                self.send_response(404)
-            except Exception as ex:
-                self.send_response(404)
-                LOGGER.error(f"{ex}")
+        except KeyError:
+            self.send_response(404)
+            LOGGER.error("Wrong field")
+        except Exception as ex:
+            self.send_response(404)
+            LOGGER.error(f"{ex}")
 
     # Process DELETE request method
     def do_DELETE(self):
-        if not find_record(self.path.split('/posts/')[-1]):
+        try:
+            delete_record(self.path.split('/posts/')[-1])
+            self.send_response(201)
+            self.send_header('Content-type', 'text/json')
+            self.end_headers()
+        except TypeError:
             self.send_response(404)
-        # Delete document
-        else:
-            try:
-                delete_record(self.path.split('/posts/')[-1])
-                self.send_response(201)
-                self.send_header('Content-type', 'text/json')
-                self.end_headers()
-            except TypeError:
-                self.send_response(404)
-            except Exception as ex:
-                self.send_response(404)
-                LOGGER.error(f"{ex}")
+        except Exception as ex:
+            self.send_response(404)
+            LOGGER.error(f"{ex}")
 
 
 def run_server():
-    """Set ip address and port. Run server"""
     server = HTTPServer(('', 8087), Server)
     LOGGER.info('Server running on port: 8087')
     server.serve_forever()

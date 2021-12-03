@@ -5,5 +5,5 @@ import pymongo
 client = pymongo.MongoClient('localhost', 27017)
 db = client['PostsDB']
 
-posts_collection = db['posts']
-author_collection = db['authors']
+posts_collection = db['post']
+author_collection = db['author']
