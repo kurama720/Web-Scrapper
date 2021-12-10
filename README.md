@@ -25,8 +25,10 @@
 ---
 Creates API processing request methods as GET, POST, PUT, DELETE. Takes data from database.
 Field *_id* is to be given with POST request.  
+
 Divides data on author data and post data. Saves it in database, into two tables/collections _author_ and _post_.
 Scrapping takes ~15 minutes.  
+
 Also includes a parses which looks through **reddit.com** with _BeautifulSoup_ and _Selenium_. Searches for given amount of posts in category _Top ->
 This Month_. Pulls such info as: _post URL_, _author's username_, _author's karma_, _cake day_, _post karma_,
 _comment karma_, _post date_, _number of comments_, _number of votes_ and _post category_. Assigns a unique id with
