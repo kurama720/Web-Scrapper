@@ -47,7 +47,7 @@ To run API on postgreSQL make following steps:
 
 1. Type your _username_, _password_ to PostgreSQL and existing _database_ in directory _database/constant_data.py_.
 2. Create database and tables with running this in the foled iTechArt/:  
-```% python execute.py -a createvault```
+```$ python execute.py -a createvault```
 
 
 ## How was it tested?
