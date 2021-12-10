@@ -40,17 +40,18 @@ uuid4() and sends it to the server.
 To run server and select database execute this in the folder iTechArt/:  
 ```$ python execute.py -a runserver -d mongo/postgre```  
 
+To run API on postgreSQL make following steps:
+
+1. Type your _username_, _password_ to PostgreSQL and existing _database_ in directory _database/constant_data.py_.
+2. Create database and tables with running this in the foled iTechArt/:  
+```$ python execute.py -a createvault```
+
 To run scrapper execute this, where -r takes an amount of records to be pulled:  
 ```$ python execute.py -r <amount> -a runscrapper```   
 
 To show logs:  
 ```$ python execute.py -a logs```
 
-To run API on postgreSQL make following steps:
-
-1. Type your _username_, _password_ to PostgreSQL and existing _database_ in directory _database/constant_data.py_.
-2. Create database and tables with running this in the foled iTechArt/:  
-```$ python execute.py -a createvault```
 
 
 ## How was it tested?
