@@ -1,6 +1,6 @@
 """Module for requests to db. Inserts, finds, updates and deletes given documents."""
 
-from typing import List, Any, NoReturn
+from typing import Dict, List, NoReturn, Union
 
 from pymongo.errors import DuplicateKeyError
 
@@ -13,7 +13,7 @@ AUTHOR_FIELDS = ['user_karma', 'cake_day', 'post_karma', 'comment_karma']
 POST_FIELDS = ['_id', 'post_url', 'comments_number', 'votes_number', 'post_category', 'post_date']
 
 
-def find_record(element_id: str = None) -> Any[dict, list]:
+def find_record(element_id: str = None) -> Union[List[Dict[str, str]], Dict[str, str]]:
     """Search for document containing given elements in given collection. Take boolean argument all_doc, search for all
     documents in collection if True.
 

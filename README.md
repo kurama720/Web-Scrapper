@@ -35,7 +35,7 @@ Field *_id* is to be given with post request.
 ## How to run?
 ---
 To run server and select database execute this in the folder iTechArt/:  
-```$ python execute.py -a runserver```  
+```$ python execute.py -a runserver -d mongo/postgre```  
 
 To run scrapper execute this, where -r takes an amount of records to be pulled:  
 ```$ python execute.py -r <amount> -a runscrapper```   

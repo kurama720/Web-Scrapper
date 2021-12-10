@@ -8,7 +8,7 @@ PARSER.add_argument('-r', '--records_amount', type=int, help='How many records t
 PARSER.add_argument('-a', '--action', required=True, choices=['runserver', 'runscrapper', 'createvault', 'logs'],
                     help='<runserver> - to run the server; <runscrapper> - to run the scrapper; <createvault> - to'
                          'create database and table')
-PARSER.add_argument('-d', '--database', required=True, default='mongo', choices=['mongo', 'postgre'],
+PARSER.add_argument('-d', '--database', default='mongo', choices=['mongo', 'postgre'],
                     help='<mongo> - to run server working on mongo; <postgre> - to run server working on postgre')
 args = PARSER.parse_args()
 # Catch keywords from commandline.
